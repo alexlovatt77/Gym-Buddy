@@ -285,6 +285,7 @@
   function updateStat(id, barId, actual, goal, unit) {
     var el = document.getElementById(id);
     var bar = document.getElementById(barId);
+    if (!el || !bar) return;
     el.textContent = formatNum(actual) + " / " + formatNum(goal) + " " + unit;
     el.classList.remove("is-under", "is-over");
     el.classList.add(goalClass(actual, goal));
@@ -328,6 +329,7 @@
 
   function renderEntries(store) {
     var tbody = document.getElementById("entry-list");
+    if (!tbody) return;
     var date = selectedDateISO();
     var entries = dayEntries(store, date).slice().reverse();
 
@@ -386,8 +388,9 @@
     saveStore(store);
     renderTotals(store);
     renderEntries(store);
-    populateMealDropdown();
-    if (!document.getElementById("history-sheet").hidden) {
+    if (logCategory) populateMealDropdown();
+    var historySheetEl = document.getElementById("history-sheet");
+    if (historySheetEl && !historySheetEl.hidden) {
       renderCalendar();
       if (!document.getElementById("history-day-view").hidden && historySelectedDay) {
         openHistoryDay(historySelectedDay);
@@ -435,9 +438,10 @@
   }
 
   function renderCalendar() {
-    var store = loadStore();
     var label = document.getElementById("cal-month-label");
     var grid = document.getElementById("cal-grid");
+    if (!label || !grid) return;
+    var store = loadStore();
     var monthDate = new Date(calCursor.year, calCursor.month, 1);
     label.textContent = monthDate.toLocaleDateString(undefined, {
       month: "long",
@@ -501,12 +505,14 @@
   }
 
   function openHistorySheet() {
+    if (!historySheet) return;
     historySheet.hidden = false;
     document.body.style.overflow = "hidden";
     showHistoryCalendar();
   }
 
   function closeHistorySheet() {
+    if (!historySheet) return;
     historySheet.hidden = true;
     document.body.style.overflow = "";
     historySelectedDay = null;
@@ -578,7 +584,9 @@
       .join("");
   }
 
-  document.getElementById("open-history").addEventListener("click", openHistorySheet);
+  if (historySheet) {
+  var openHistoryBtn = document.getElementById("open-history");
+  if (openHistoryBtn) openHistoryBtn.addEventListener("click", openHistorySheet);
   document.getElementById("cal-prev").addEventListener("click", function () {
     calCursor.month -= 1;
     if (calCursor.month < 0) {
@@ -610,26 +618,28 @@
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !historySheet.hidden) closeHistorySheet();
   });
+  }
 
-  syncActiveDay(false);
-  scheduleMidnightReset();
-
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") {
-      syncActiveDay(false);
-      scheduleMidnightReset();
-    }
-  });
-
-  window.addEventListener("focus", function () {
+  if (logCategory) {
     syncActiveDay(false);
-  });
+    scheduleMidnightReset();
 
-  logCategory.addEventListener("change", function () {
-    populateMealDropdown();
-  });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") {
+        syncActiveDay(false);
+        scheduleMidnightReset();
+      }
+    });
 
-  document.getElementById("log-form").addEventListener("submit", function (event) {
+    window.addEventListener("focus", function () {
+      syncActiveDay(false);
+    });
+
+    logCategory.addEventListener("change", function () {
+      populateMealDropdown();
+    });
+
+    document.getElementById("log-form").addEventListener("submit", function (event) {
     event.preventDefault();
     logError.hidden = true;
 
@@ -660,8 +670,9 @@
     var date = selectedDateISO();
     if (!store.logs[date]) store.logs[date] = [];
     ensureTodayGoals(store);
+    var entryId = uid("e");
     store.logs[date].push({
-      id: uid("e"),
+      id: entryId,
       mealId: meal.id,
       category: meal.category,
       name: meal.name,
@@ -674,6 +685,17 @@
     saveStore(store);
     logMeal.value = "";
     refresh();
+    window.studioUndo.offer({
+      message: "Meal added",
+      onUndo: function () {
+        var s = loadStore();
+        s.logs[date] = dayEntries(s, date).filter(function (entry) {
+          return entry.id !== entryId;
+        });
+        saveStore(s);
+        refresh();
+      },
+    });
   });
 
   document.body.addEventListener("click", function (event) {
@@ -704,6 +726,7 @@
       });
     }
   });
+  }
 
   refresh();
 })();

@@ -2,6 +2,14 @@
   "use strict";
 
   var STORAGE_KEY = "studio.maxes.v1";
+  var CARDIO_KEY = "studio.cardio.runs";
+
+  var DISTANCES = {
+    mile1: { label: "1 mile" },
+    mile3: { label: "3 mile" },
+  };
+
+  var CARDIO_TYPES = ["mile1", "mile3"];
 
   var EXERCISES = {
     rm1: [
@@ -41,6 +49,66 @@
 
   function saveStore(store) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }
+
+  function emptyCardioStore() {
+    return { mile1: [], mile3: [] };
+  }
+
+  function loadCardioStore() {
+    try {
+      var raw = localStorage.getItem(CARDIO_KEY);
+      if (!raw) return emptyCardioStore();
+      var data = JSON.parse(raw);
+      return {
+        mile1: Array.isArray(data.mile1) ? data.mile1 : [],
+        mile3: Array.isArray(data.mile3) ? data.mile3 : [],
+      };
+    } catch (err) {
+      console.warn("Could not read cardio store", err);
+      return emptyCardioStore();
+    }
+  }
+
+  function saveCardioStore(store) {
+    localStorage.setItem(CARDIO_KEY, JSON.stringify(store));
+  }
+
+  function isCardioType(type) {
+    return CARDIO_TYPES.indexOf(type) >= 0;
+  }
+
+  function cardioUid() {
+    return "r_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+  }
+
+  function sortedCardioEntries(list) {
+    return list.slice().sort(function (a, b) {
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+  }
+
+  function bestCardioEntry(list) {
+    if (!list.length) return null;
+    return list.reduce(function (best, entry) {
+      return entry.seconds < best.seconds ? entry : best;
+    });
+  }
+
+  function formatTime(seconds) {
+    if (seconds == null || !isFinite(seconds)) return "—";
+    var total = Math.round(seconds);
+    var h = Math.floor(total / 3600);
+    var m = Math.floor((total % 3600) / 60);
+    var s = total % 60;
+    var ss = s < 10 ? "0" + s : String(s);
+    if (h > 0) {
+      var mm = m < 10 ? "0" + m : String(m);
+      return h + ":" + mm + ":" + ss;
+    }
+    return m + ":" + ss;
   }
 
   function uid() {
@@ -152,11 +220,20 @@
   ["rm1", "rm8"].forEach(function (type) {
     EXERCISES[type].forEach(function (item) {
       CHART_SLIDES.push({
+        kind: "lift",
         type: type,
         exercise: item.id,
         label: item.label,
         typeLabel: TYPE_LABEL[type],
       });
+    });
+  });
+  CARDIO_TYPES.forEach(function (distance) {
+    CHART_SLIDES.push({
+      kind: "cardio",
+      distance: distance,
+      label: DISTANCES[distance].label,
+      typeLabel: "Cardio",
     });
   });
 
@@ -298,6 +375,133 @@
       "</svg>";
   }
 
+  function renderTimeChart(container, entries) {
+    var sorted = sortedCardioEntries(entries);
+
+    if (!sorted.length) {
+      container.innerHTML = '<p class="chart-empty">Record a best to start this chart.</p>';
+      return;
+    }
+
+    var width = 640;
+    var height = 220;
+    var pad = { top: 16, right: 16, bottom: 44, left: 52 };
+    var innerW = width - pad.left - pad.right;
+    var innerH = height - pad.top - pad.bottom;
+
+    var times = sorted.map(function (e) {
+      return e.seconds;
+    });
+    var minT = Math.min.apply(null, times);
+    var maxT = Math.max.apply(null, times);
+    var span = maxT - minT;
+    var padY = span === 0 ? Math.max(30, minT * 0.05) : span * 0.18;
+    var yMin = Math.max(0, minT - padY);
+    var yMax = maxT + padY;
+
+    function xAt(i) {
+      if (sorted.length === 1) return pad.left + innerW / 2;
+      return pad.left + (i / (sorted.length - 1)) * innerW;
+    }
+
+    function yAt(seconds) {
+      return pad.top + ((yMax - seconds) / (yMax - yMin)) * innerH;
+    }
+
+    var gridLines = [];
+    var ticks = 4;
+    for (var g = 0; g <= ticks; g++) {
+      var value = yMin + ((yMax - yMin) * g) / ticks;
+      var y = yAt(value);
+      gridLines.push(
+        '<line x1="' +
+          pad.left +
+          '" y1="' +
+          y +
+          '" x2="' +
+          (width - pad.right) +
+          '" y2="' +
+          y +
+          '" stroke="#c2ccd6" stroke-width="1" />' +
+          '<text x="' +
+          (pad.left - 8) +
+          '" y="' +
+          (y + 4) +
+          '" text-anchor="end" fill="#6b7c89" font-size="11" font-family="IBM Plex Sans, sans-serif">' +
+          escapeXml(formatTime(value)) +
+          "</text>"
+      );
+    }
+
+    var points = sorted.map(function (entry, i) {
+      return { x: xAt(i), y: yAt(entry.seconds), entry: entry };
+    });
+
+    var pathD = points
+      .map(function (p, i) {
+        return (i === 0 ? "M" : "L") + p.x.toFixed(1) + " " + p.y.toFixed(1);
+      })
+      .join(" ");
+
+    var dots = points
+      .map(function (p) {
+        return (
+          '<circle cx="' +
+          p.x.toFixed(1) +
+          '" cy="' +
+          p.y.toFixed(1) +
+          '" r="4.5" fill="#1f4e5f" stroke="#f4f7f9" stroke-width="2">' +
+          "<title>" +
+          escapeXml(formatDateFull(p.entry.date) + " · " + formatTime(p.entry.seconds)) +
+          "</title></circle>"
+        );
+      })
+      .join("");
+
+    var xLabels = points
+      .map(function (p, i) {
+        var show =
+          sorted.length <= 6 ||
+          i === 0 ||
+          i === sorted.length - 1 ||
+          i % Math.ceil(sorted.length / 5) === 0;
+        if (!show) return "";
+        return (
+          '<text x="' +
+          p.x.toFixed(1) +
+          '" y="' +
+          (height - 14) +
+          '" text-anchor="middle" fill="#6b7c89" font-size="11" font-family="IBM Plex Sans, sans-serif">' +
+          escapeXml(formatDateLabel(p.entry.date)) +
+          "</text>"
+        );
+      })
+      .join("");
+
+    container.innerHTML =
+      '<svg viewBox="0 0 ' +
+      width +
+      " " +
+      height +
+      '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+      gridLines.join("") +
+      '<line x1="' +
+      pad.left +
+      '" y1="' +
+      (pad.top + innerH) +
+      '" x2="' +
+      (width - pad.right) +
+      '" y2="' +
+      (pad.top + innerH) +
+      '" stroke="#9aabb8" stroke-width="1.25" />' +
+      '<path d="' +
+      pathD +
+      '" fill="none" stroke="#1f4e5f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />' +
+      dots +
+      xLabels +
+      "</svg>";
+  }
+
   function renderSlideDots(containerId, activeIndex) {
     var dots = document.getElementById(containerId);
     dots.innerHTML = CHART_SLIDES.map(function (_, i) {
@@ -306,7 +510,7 @@
         (i === activeIndex ? " is-active" : "") +
         '" data-slide-index="' +
         i +
-        '" aria-label="Exercise ' +
+        '" aria-label="Slide ' +
         (i + 1) +
         '"></button>'
       );
@@ -316,40 +520,82 @@
   function showProgressSlide(index) {
     progressIndex = (index + CHART_SLIDES.length) % CHART_SLIDES.length;
     var slide = CHART_SLIDES[progressIndex];
-    var store = loadStore();
-    var entries = entriesFor(store.entries, slide.type, slide.exercise);
-    var history = entries.slice().reverse();
+    var tbody = document.getElementById("max-history-body");
+    var valueHead = document.getElementById("progress-value-head");
 
     document.getElementById("progress-slide-label").textContent = slide.label;
     document.getElementById("progress-slide-meta").textContent = slide.typeLabel;
-    renderWeightChart(document.getElementById("max-chart"), entries);
 
-    var tbody = document.getElementById("max-history-body");
-    if (!history.length) {
-      tbody.innerHTML =
-        '<tr class="is-placeholder"><td colspan="3">No bests yet</td></tr>';
+    if (slide.kind === "cardio") {
+      var cardioStore = loadCardioStore();
+      var cardioEntries = sortedCardioEntries(cardioStore[slide.distance]);
+      var cardioHistory = cardioEntries.slice().reverse();
+      if (valueHead) valueHead.textContent = "Time";
+      renderTimeChart(document.getElementById("max-chart"), cardioEntries);
+
+      if (!cardioHistory.length) {
+        tbody.innerHTML =
+          '<tr class="is-placeholder"><td colspan="3">No bests yet</td></tr>';
+      } else {
+        tbody.innerHTML = cardioHistory
+          .map(function (entry) {
+            return (
+              "<tr>" +
+              "<td>" +
+              escapeHtml(formatDateFull(entry.date)) +
+              "</td>" +
+              '<td class="num">' +
+              escapeHtml(formatTime(entry.seconds)) +
+              "</td>" +
+              '<td class="num"><div class="history-actions">' +
+              '<button type="button" data-edit-date="' +
+              escapeHtml(entry.id) +
+              '" data-distance="' +
+              escapeHtml(slide.distance) +
+              '">Date</button>' +
+              '<button type="button" data-delete="' +
+              escapeHtml(entry.id) +
+              '" data-distance="' +
+              escapeHtml(slide.distance) +
+              '">Remove</button></div></td>' +
+              "</tr>"
+            );
+          })
+          .join("");
+      }
     } else {
-      tbody.innerHTML = history
-        .map(function (entry) {
-          return (
-            "<tr>" +
-            "<td>" +
-            escapeHtml(formatDateFull(entry.date)) +
-            "</td>" +
-            '<td class="num">' +
-            escapeHtml(formatWeight(entry.weight)) +
-            "</td>" +
-            '<td class="num"><div class="history-actions">' +
-            '<button type="button" data-edit-date="' +
-            escapeHtml(entry.id) +
-            '">Date</button>' +
-            '<button type="button" data-delete="' +
-            escapeHtml(entry.id) +
-            '">Remove</button></div></td>' +
-            "</tr>"
-          );
-        })
-        .join("");
+      var store = loadStore();
+      var entries = entriesFor(store.entries, slide.type, slide.exercise);
+      var history = entries.slice().reverse();
+      if (valueHead) valueHead.textContent = "lbs";
+      renderWeightChart(document.getElementById("max-chart"), entries);
+
+      if (!history.length) {
+        tbody.innerHTML =
+          '<tr class="is-placeholder"><td colspan="3">No bests yet</td></tr>';
+      } else {
+        tbody.innerHTML = history
+          .map(function (entry) {
+            return (
+              "<tr>" +
+              "<td>" +
+              escapeHtml(formatDateFull(entry.date)) +
+              "</td>" +
+              '<td class="num">' +
+              escapeHtml(formatWeight(entry.weight)) +
+              "</td>" +
+              '<td class="num"><div class="history-actions">' +
+              '<button type="button" data-edit-date="' +
+              escapeHtml(entry.id) +
+              '">Date</button>' +
+              '<button type="button" data-delete="' +
+              escapeHtml(entry.id) +
+              '">Remove</button></div></td>' +
+              "</tr>"
+            );
+          })
+          .join("");
+      }
     }
 
     renderSlideDots("progress-dots", progressIndex);
@@ -358,6 +604,11 @@
   var typeSelect = document.getElementById("max-type");
   var exerciseSelect = document.getElementById("max-exercise");
   var weightSelect = document.getElementById("max-weight");
+  var timeMinSelect = document.getElementById("max-time-min");
+  var timeSecSelect = document.getElementById("max-time-sec");
+  var exerciseField = document.getElementById("max-exercise-field");
+  var weightField = document.getElementById("max-weight-field");
+  var timeField = document.getElementById("max-time-field");
   var errorEl = document.getElementById("max-error");
   var editDateSheet = document.getElementById("edit-date-sheet");
   var editMonthSelect = document.getElementById("edit-month");
@@ -365,6 +616,7 @@
   var editYearSelect = document.getElementById("edit-year");
   var editDateError = document.getElementById("edit-date-error");
   var editingEntryId = null;
+  var editingDistance = null;
 
   function todayISO() {
     var d = new Date();
@@ -373,12 +625,38 @@
 
   function populateExercises() {
     var type = typeSelect.value;
+    if (isCardioType(type)) return;
     var list = EXERCISES[type] || [];
     exerciseSelect.innerHTML = list
       .map(function (item) {
         return '<option value="' + item.id + '">' + escapeHtml(item.label) + "</option>";
       })
       .join("");
+  }
+
+  function updateFormForType() {
+    var type = typeSelect.value;
+    var cardio = isCardioType(type);
+
+    if (exerciseField) exerciseField.hidden = cardio;
+    if (weightField) weightField.hidden = cardio;
+    if (timeField) timeField.hidden = !cardio;
+
+    exerciseSelect.required = !cardio;
+    weightSelect.required = !cardio;
+    if (timeMinSelect) timeMinSelect.required = cardio;
+    if (timeSecSelect) timeSecSelect.required = cardio;
+
+    if (!cardio) populateExercises();
+  }
+
+  function readFormSeconds() {
+    if (!timeMinSelect || !timeSecSelect) return null;
+    var minutes = Number(timeMinSelect.value);
+    var seconds = Number(timeSecSelect.value);
+    if (!isFinite(minutes) || !isFinite(seconds)) return null;
+    var total = minutes * 60 + seconds;
+    return total > 0 ? total : null;
   }
 
   function refreshEditDays(preferredDay) {
@@ -398,6 +676,9 @@
         return Number.isInteger(v) ? String(v) : v.toFixed(1);
       }
     );
+
+    if (timeMinSelect) fillSelect(timeMinSelect, range(0, 99), pad2);
+    if (timeSecSelect) fillSelect(timeSecSelect, range(0, 59), pad2);
 
     var months = [
       "January",
@@ -429,7 +710,10 @@
     });
 
     populateExercises();
+    updateFormForType();
     setSelectValue(weightSelect, 135);
+    if (timeMinSelect) setSelectValue(timeMinSelect, 7);
+    if (timeSecSelect) setSelectValue(timeSecSelect, 0);
   }
 
   function readEditDate() {
@@ -441,8 +725,9 @@
     return year + "-" + pad2(month) + "-" + pad2(day);
   }
 
-  function openEditDate(entryId, iso) {
+  function openEditDate(entryId, iso, distance) {
     editingEntryId = entryId;
+    editingDistance = distance || null;
     editDateError.hidden = true;
     var parts = String(iso || todayISO()).split("-");
     var year = Number(parts[0]);
@@ -457,8 +742,32 @@
 
   function closeEditDate() {
     editingEntryId = null;
+    editingDistance = null;
     editDateSheet.hidden = true;
     document.body.style.overflow = "";
+  }
+
+  function renderCardioTable() {
+    var tbody = document.getElementById("table-cardio");
+    if (!tbody) return;
+    var store = loadCardioStore();
+
+    tbody.innerHTML = CARDIO_TYPES.map(function (distance) {
+      var best = bestCardioEntry(store[distance]);
+      return (
+        "<tr>" +
+        "<td>" +
+        escapeHtml(DISTANCES[distance].label) +
+        "</td>" +
+        '<td class="num">' +
+        (best ? escapeHtml(formatTime(best.seconds)) : "—") +
+        "</td>" +
+        '<td class="num">' +
+        (best ? escapeHtml(formatDateFull(best.date)) : "—") +
+        "</td>" +
+        "</tr>"
+      );
+    }).join("");
   }
 
   function renderBestTable(type, tbodyId) {
@@ -489,16 +798,20 @@
   function refresh() {
     renderBestTable("rm1", "table-1rm");
     renderBestTable("rm8", "table-8rm");
+    renderCardioTable();
     showProgressSlide(progressIndex);
   }
 
   function resetFormDefaults() {
     typeSelect.value = "rm1";
     populateExercises();
+    updateFormForType();
     setSelectValue(weightSelect, 135);
+    if (timeMinSelect) setSelectValue(timeMinSelect, 7);
+    if (timeSecSelect) setSelectValue(timeSecSelect, 0);
   }
 
-  typeSelect.addEventListener("change", populateExercises);
+  typeSelect.addEventListener("change", updateFormForType);
 
   document.getElementById("progress-prev").addEventListener("click", function () {
     showProgressSlide(progressIndex - 1);
@@ -517,9 +830,35 @@
     errorEl.hidden = true;
 
     var type = typeSelect.value;
+    var date = todayISO();
+
+    if (isCardioType(type)) {
+      if (!DISTANCES[type]) {
+        errorEl.textContent = "Choose 1 mile or 3 mile.";
+        errorEl.hidden = false;
+        return;
+      }
+      var seconds = readFormSeconds();
+      if (seconds == null) {
+        errorEl.textContent = "Pick a time greater than 0:00.";
+        errorEl.hidden = false;
+        return;
+      }
+      var cardioStore = loadCardioStore();
+      cardioStore[type].push({
+        id: cardioUid(),
+        date: date,
+        seconds: seconds,
+        createdAt: Date.now(),
+      });
+      saveCardioStore(cardioStore);
+      resetFormDefaults();
+      refresh();
+      return;
+    }
+
     var exercise = exerciseSelect.value;
     var weight = Number(weightSelect.value);
-    var date = todayISO();
 
     if (!EXERCISES[type]) {
       errorEl.textContent = "Choose 1-rep or 8-rep.";
@@ -564,6 +903,24 @@
       editDateError.hidden = false;
       return;
     }
+
+    if (editingDistance) {
+      var cardioStore = loadCardioStore();
+      cardioStore[editingDistance] = cardioStore[editingDistance].map(function (entry) {
+        if (entry.id !== editingEntryId) return entry;
+        return {
+          id: entry.id,
+          date: date,
+          seconds: entry.seconds,
+          createdAt: entry.createdAt,
+        };
+      });
+      saveCardioStore(cardioStore);
+      closeEditDate();
+      refresh();
+      return;
+    }
+
     var store = loadStore();
     store.entries = store.entries.map(function (entry) {
       if (entry.id !== editingEntryId) return entry;
@@ -593,6 +950,14 @@
     var editBtn = event.target.closest("[data-edit-date]");
     if (editBtn) {
       var editId = editBtn.getAttribute("data-edit-date");
+      var editDistance = editBtn.getAttribute("data-distance");
+      if (editDistance) {
+        var cardioEntry = loadCardioStore()[editDistance].find(function (item) {
+          return item.id === editId;
+        });
+        if (cardioEntry) openEditDate(cardioEntry.id, cardioEntry.date, editDistance);
+        return;
+      }
       var entry = loadStore().entries.find(function (item) {
         return item.id === editId;
       });
@@ -603,6 +968,32 @@
     var btn = event.target.closest("[data-delete]");
     if (!btn) return;
     var id = btn.getAttribute("data-delete");
+    var distance = btn.getAttribute("data-distance");
+
+    if (distance) {
+      var cardioStore = loadCardioStore();
+      var removedCardio = null;
+      cardioStore[distance].forEach(function (entry) {
+        if (entry.id === id) removedCardio = entry;
+      });
+      if (!removedCardio) return;
+      cardioStore[distance] = cardioStore[distance].filter(function (entry) {
+        return entry.id !== id;
+      });
+      saveCardioStore(cardioStore);
+      refresh();
+      window.studioUndo.offer({
+        message: "Run removed",
+        onUndo: function () {
+          var s = loadCardioStore();
+          s[distance].push(removedCardio);
+          saveCardioStore(s);
+          refresh();
+        },
+      });
+      return;
+    }
+
     var store = loadStore();
     var removed = null;
     store.entries.forEach(function (entry) {

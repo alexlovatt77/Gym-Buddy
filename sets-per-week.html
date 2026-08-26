@@ -4,23 +4,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#e9eef2" />
+    <script src="js/theme.js"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
-    <title>Sets per week — Gym Buddy</title>
+    <title>This week — Gym Buddy</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
     <div class="app">
       <header class="masthead">
         <p class="masthead__brand">Gym Buddy</p>
-        <p class="masthead__meta">01 · Volume</p>
       </header>
 
       <main class="page">
-        <p class="page__kicker">Weekly volume</p>
-        <h1 class="page__title">Sets per week</h1>
+        <p class="page__kicker">Weekly log</p>
+        <h1 class="page__title">This week</h1>
 
-        <section class="section" aria-labelledby="this-week">
-          <h2 class="section__title" id="this-week">This week</h2>
+        <section class="section" aria-labelledby="week-workouts-heading">
+          <h2 class="section__title" id="week-workouts-heading">Workouts</h2>
+          <p class="section__note" id="week-workouts-range">—</p>
+
+          <div class="chart-slideshow">
+            <div class="cal-nav">
+              <button class="btn btn--ghost" type="button" id="week-prev" aria-label="Previous day">
+                ←
+              </button>
+              <p class="cal-nav__label" id="week-day-label">—</p>
+              <button class="btn btn--ghost" type="button" id="week-next" aria-label="Next day">
+                →
+              </button>
+            </div>
+            <p class="chart-slide-meta" id="week-day-meta"></p>
+            <div id="week-workouts" class="week-workouts"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="volume-heading">
+          <h2 class="section__title" id="volume-heading">Volume</h2>
           <p class="section__note" id="week-range">—</p>
 
           <table class="ledger">
@@ -73,19 +92,20 @@
       </div>
 
       <nav class="tabbar" aria-label="Primary">
-        <a href="workout.html"><span class="tabbar__word">Lift</span></a>
-        <a href="sets-per-week.html"><span class="tabbar__word">Sets</span></a>
+        <a href="today.html"><span class="tabbar__word">Today</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">This week</span></a>
         <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
-        <a href="cardio-maxes.html"><span class="tabbar__word">Cardio</span></a>
         <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
         <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
-        <a href="settings.html"><span class="tabbar__word">Setup</span></a>
+        <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
     <script src="js/app-data.js"></script>
     <script src="js/nav.js"></script>
+    <script src="js/undo.js"></script>
     <script src="js/exercise-library.js"></script>
     <script src="js/targets.js"></script>
+    <script src="js/workout.js"></script>
     <script src="js/sets-week.js"></script>
   </body>
 </html>

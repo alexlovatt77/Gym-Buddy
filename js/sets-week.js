@@ -266,4 +266,6 @@
   });
 
   refresh();
+
+  window.studioSetsWeekRefresh = refresh;
 })();

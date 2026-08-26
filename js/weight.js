@@ -161,9 +161,12 @@
 
   var wholeSelect = document.getElementById("weight-whole");
   var decimalSelect = document.getElementById("weight-decimal");
+  if (!wholeSelect || !decimalSelect) return;
+
   var errorEl = document.getElementById("weight-error");
   var tooltip = document.getElementById("weight-tooltip");
   var chartEl = document.getElementById("weight-chart");
+  var hasChart = !!chartEl;
 
   fillSelect(wholeSelect, range(0, 400, 1));
   decimalSelect.innerHTML = range(0, 0.9, 0.1)
@@ -260,6 +263,7 @@
   function updateModeUi() {
     var toggle = document.getElementById("chart-mode-toggle");
     var note = document.getElementById("chart-mode-note");
+    if (!toggle || !note) return;
     var isWeekly = chartMode === "weekly";
     toggle.setAttribute("aria-pressed", isWeekly ? "true" : "false");
     toggle.setAttribute(
@@ -272,15 +276,20 @@
 
   function renderForm() {
     var store = loadStore();
-    document.getElementById("today-label").textContent = formatDateFull(todayISO());
+    var labelEl =
+      document.getElementById("today-label") ||
+      document.getElementById("weight-today-label");
+    if (labelEl) labelEl.textContent = formatDateFull(todayISO());
     var existing = entryForToday(store);
     setWeightSelects(existing ? existing.weight : 180);
-    document.getElementById("weight-save").textContent = existing
-      ? "Update today’s weight"
-      : "Save today’s weight";
+    var saveBtn = document.getElementById("weight-save");
+    if (saveBtn) {
+      saveBtn.textContent = existing ? "Update today’s weight" : "Save today’s weight";
+    }
   }
 
   function renderChart() {
+    if (!chartEl) return;
     updateModeUi();
     var series = getSeries();
     var isWeekly = chartMode === "weekly";
@@ -493,6 +502,7 @@
   }
 
   function showTooltip(index, clientX, clientY) {
+    if (!tooltip || !chartEl) return;
     var series = chartEl._series;
     if (!series || !series[index]) {
       tooltip.hidden = true;
@@ -534,33 +544,40 @@
   }
 
   function hideTooltip() {
-    tooltip.hidden = true;
+    if (tooltip) tooltip.hidden = true;
   }
 
-  chartEl.addEventListener("pointermove", function (event) {
-    var hit = event.target.closest(".day-hit");
-    if (!hit) {
-      hideTooltip();
-      return;
+  if (hasChart) {
+    chartEl.addEventListener("pointermove", function (event) {
+      var hit = event.target.closest(".day-hit");
+      if (!hit) {
+        hideTooltip();
+        return;
+      }
+      showTooltip(Number(hit.getAttribute("data-index")), event.clientX, event.clientY);
+    });
+
+    chartEl.addEventListener("pointerleave", hideTooltip);
+
+    chartEl.addEventListener("click", function (event) {
+      var hit = event.target.closest(".day-hit");
+      if (!hit) return;
+      showTooltip(Number(hit.getAttribute("data-index")), event.clientX, event.clientY);
+    });
+
+    var modeToggle = document.getElementById("chart-mode-toggle");
+    if (modeToggle) {
+      modeToggle.addEventListener("click", function () {
+        chartMode = chartMode === "daily" ? "weekly" : "daily";
+        hideTooltip();
+        renderChart();
+      });
     }
-    showTooltip(Number(hit.getAttribute("data-index")), event.clientX, event.clientY);
-  });
+  }
 
-  chartEl.addEventListener("pointerleave", hideTooltip);
-
-  chartEl.addEventListener("click", function (event) {
-    var hit = event.target.closest(".day-hit");
-    if (!hit) return;
-    showTooltip(Number(hit.getAttribute("data-index")), event.clientX, event.clientY);
-  });
-
-  document.getElementById("chart-mode-toggle").addEventListener("click", function () {
-    chartMode = chartMode === "daily" ? "weekly" : "daily";
-    hideTooltip();
-    renderChart();
-  });
-
-  document.getElementById("weight-form").addEventListener("submit", function (event) {
+  var weightForm = document.getElementById("weight-form");
+  if (weightForm) {
+    weightForm.addEventListener("submit", function (event) {
     event.preventDefault();
     errorEl.hidden = true;
     var weight = combinedWeight();
@@ -586,7 +603,8 @@
     saveStore(store);
     renderForm();
     renderChart();
-  });
+    });
+  }
 
   renderForm();
   renderChart();

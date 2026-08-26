@@ -21,6 +21,11 @@
       label: "Macro goals",
       panel: "setup-panel-goals",
     },
+    {
+      id: "appearance",
+      label: "Appearance",
+      panel: "setup-panel-appearance",
+    },
   ];
 
   var CATEGORIES = [
@@ -389,10 +394,18 @@
   renderLibrary();
   fillGoalsForm();
 
+  var themeSelect = document.getElementById("theme-mode");
+  if (themeSelect && window.studioTheme) {
+    themeSelect.value = window.studioTheme.getMode();
+    themeSelect.addEventListener("change", function () {
+      window.studioTheme.setMode(themeSelect.value);
+    });
+  }
+
   document.getElementById("clear-all-data").addEventListener("click", function () {
     if (
       !confirm(
-        "Clear all saved workouts, maxes, cardio, macros, weight, and setup data? This cannot be undone."
+        "Clear all saved workouts, maxes, cardio, macros, weight, and settings data? This cannot be undone."
       )
     ) {
       return;

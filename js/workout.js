@@ -205,13 +205,17 @@
   }
 
   var LIBRARY = window.STUDIO_PPL_LIBRARY || [];
+  var listEl = document.getElementById("session-list");
+  var weekWorkoutsEl = document.getElementById("week-workouts");
+  var hasTodayUI = !!(listEl && document.getElementById("finish-workout"));
+  var hasWeekUI = !!weekWorkoutsEl;
+
   var sheet = document.getElementById("add-set-sheet");
   var categorySelect = document.getElementById("set-category");
   var exerciseSelect = document.getElementById("set-exercise");
   var repsSelect = document.getElementById("set-reps");
   var weightSelect = document.getElementById("set-weight");
   var errorEl = document.getElementById("add-set-error");
-  var listEl = document.getElementById("session-list");
   var finishBtn = document.getElementById("finish-workout");
   var finishMsg = document.getElementById("finish-msg");
   var openAddSetBtn = document.getElementById("open-add-set");
@@ -220,20 +224,23 @@
   var weekDayIndex = 0;
   var weekDayCount = 0;
 
-  fillSelect(repsSelect, range(1, 12));
-  fillSelect(
-    weightSelect,
-    range(0, 250, 5),
-    function (v) {
-      return Number.isInteger(v) ? String(v) : v.toFixed(1);
-    }
-  );
-  setSelectValue(repsSelect, 8);
-  setSelectValue(weightSelect, 135);
+  if (hasTodayUI && repsSelect && weightSelect) {
+    fillSelect(repsSelect, range(1, 12));
+    fillSelect(
+      weightSelect,
+      range(0, 250, 5),
+      function (v) {
+        return Number.isInteger(v) ? String(v) : v.toFixed(1);
+      }
+    );
+    setSelectValue(repsSelect, 8);
+    setSelectValue(weightSelect, 135);
+  }
 
   function syncDay() {
     activeDay = todayISO();
-    document.getElementById("session-date").textContent = formatDateFull(activeDay);
+    var dateEl = document.getElementById("session-date");
+    if (dateEl) dateEl.textContent = formatDateFull(activeDay);
   }
 
   function loadPickerPrefs() {
@@ -393,6 +400,8 @@
     var prevBtn = document.getElementById("week-prev");
     var nextBtn = document.getElementById("week-next");
 
+    if (!wrap || !label || !meta || !prevBtn || !nextBtn) return;
+
     if (!days.length) {
       label.textContent = "—";
       meta.textContent = "";
@@ -429,7 +438,9 @@
   }
 
   function renderWeekWorkouts() {
+    if (!hasWeekUI) return;
     var rangeEl = document.getElementById("week-workouts-range");
+    if (!rangeEl) return;
     var week = weekCompletedDays(loadStore());
     var days = week.days;
     var opts = { month: "short", day: "numeric" };
@@ -449,8 +460,9 @@
   }
 
   function renderSession() {
+    if (!hasTodayUI || !listEl) return;
     syncDay();
-    finishMsg.hidden = true;
+    if (finishMsg) finishMsg.hidden = true;
     var store = loadStore();
     var finishedToday = finishedExercises(store, activeDay);
 
@@ -512,11 +524,18 @@
           .join("");
       }
     }
+  }
 
-    renderWeekWorkouts();
+  function refreshWorkoutViews() {
+    if (hasTodayUI) renderSession();
+    if (hasWeekUI) renderWeekWorkouts();
+    if (typeof window.studioSetsWeekRefresh === "function") {
+      window.studioSetsWeekRefresh();
+    }
   }
 
   function openSheet(preferredExerciseName) {
+    if (!hasTodayUI) return;
     if (dayHasFinishedWorkout(loadStore(), activeDay)) {
       finishMsg.textContent = "You already finished today’s workout. Remove it to log a new one.";
       finishMsg.hidden = false;
@@ -535,36 +554,54 @@
     document.body.style.overflow = "";
   }
 
-  document.getElementById("week-prev").addEventListener("click", function () {
-    showWeekDay(weekDayIndex - 1, weekCompletedDays(loadStore()).days);
-  });
-  document.getElementById("week-next").addEventListener("click", function () {
-    showWeekDay(weekDayIndex + 1, weekCompletedDays(loadStore()).days);
-  });
+  if (hasWeekUI) {
+    var weekPrevBtn = document.getElementById("week-prev");
+    var weekNextBtn = document.getElementById("week-next");
+    var weekWorkoutsWrap = document.getElementById("week-workouts");
 
-  document.getElementById("open-add-set").addEventListener("click", function () {
-    openSheet(null);
-  });
+    if (weekPrevBtn) {
+      weekPrevBtn.addEventListener("click", function () {
+        showWeekDay(weekDayIndex - 1, weekCompletedDays(loadStore()).days);
+      });
+    }
+    if (weekNextBtn) {
+      weekNextBtn.addEventListener("click", function () {
+        showWeekDay(weekDayIndex + 1, weekCompletedDays(loadStore()).days);
+      });
+    }
+    if (weekWorkoutsWrap) {
+      weekWorkoutsWrap.addEventListener("click", function (event) {
+        var removeBtn = event.target.closest("[data-remove-workout]");
+        if (!removeBtn) return;
+        handleRemoveWorkout(removeBtn.getAttribute("data-remove-workout"));
+      });
+    }
+  }
 
-  categorySelect.addEventListener("change", function () {
-    populateLibraryExercises(null);
-  });
+  if (hasTodayUI) {
+    if (openAddSetBtn) {
+      openAddSetBtn.addEventListener("click", function () {
+        openSheet(null);
+      });
+    }
 
-  sheet.addEventListener("click", function (event) {
-    if (event.target.closest("[data-close-add]")) closeSheet();
-  });
+    if (categorySelect) {
+      categorySelect.addEventListener("change", function () {
+        populateLibraryExercises(null);
+      });
+    }
 
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !sheet.hidden) closeSheet();
-  });
+    if (sheet) {
+      sheet.addEventListener("click", function (event) {
+        if (event.target.closest("[data-close-add]")) closeSheet();
+      });
+    }
 
-  document.getElementById("week-workouts").addEventListener("click", function (event) {
-    var removeBtn = event.target.closest("[data-remove-workout]");
-    if (!removeBtn) return;
-    handleRemoveWorkout(removeBtn.getAttribute("data-remove-workout"));
-  });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && sheet && !sheet.hidden) closeSheet();
+    });
 
-  listEl.addEventListener("click", function (event) {
+    listEl.addEventListener("click", function (event) {
     var removeBtn = event.target.closest("[data-remove-workout]");
     if (removeBtn) {
       handleRemoveWorkout(removeBtn.getAttribute("data-remove-workout"));
@@ -631,99 +668,108 @@
     });
   });
 
-  document.getElementById("add-set-form").addEventListener("submit", function (event) {
-    event.preventDefault();
-    errorEl.hidden = true;
-    syncDay();
+    var addSetForm = document.getElementById("add-set-form");
+    if (addSetForm) {
+      addSetForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        errorEl.hidden = true;
+        syncDay();
 
-    var reps = Number(repsSelect.value);
-    var weight = Number(weightSelect.value);
-    if (!isFinite(reps) || reps < 1) {
-      errorEl.textContent = "Choose reps.";
-      errorEl.hidden = false;
-      return;
-    }
-    if (!isFinite(weight) || weight < 0) {
-      errorEl.textContent = "Choose weight.";
-      errorEl.hidden = false;
-      return;
-    }
+        var reps = Number(repsSelect.value);
+        var weight = Number(weightSelect.value);
+        if (!isFinite(reps) || reps < 1) {
+          errorEl.textContent = "Choose reps.";
+          errorEl.hidden = false;
+          return;
+        }
+        if (!isFinite(weight) || weight < 0) {
+          errorEl.textContent = "Choose weight.";
+          errorEl.hidden = false;
+          return;
+        }
 
-    var name = exerciseSelect.value || null;
-    if (!name) {
-      errorEl.textContent = "Choose an exercise from the library.";
-      errorEl.hidden = false;
-      return;
-    }
+        var name = exerciseSelect.value || null;
+        if (!name) {
+          errorEl.textContent = "Choose an exercise from the library.";
+          errorEl.hidden = false;
+          return;
+        }
 
-    var store = loadStore();
-    if (dayHasFinishedWorkout(store, activeDay)) {
-      errorEl.textContent = "You already finished today’s workout.";
-      errorEl.hidden = false;
-      closeSheet();
-      renderSession();
-      return;
-    }
+        var store = loadStore();
+        if (dayHasFinishedWorkout(store, activeDay)) {
+          errorEl.textContent = "You already finished today’s workout.";
+          errorEl.hidden = false;
+          closeSheet();
+          renderSession();
+          return;
+        }
 
-    var draft = ensureDraft(store, activeDay);
-    var list = draft.exercises;
-    var exercise = list.find(function (item) {
-      return item.name.toLowerCase() === name.toLowerCase();
-    });
-    if (!exercise) {
-      exercise = { id: uid("ex"), name: name, sets: [] };
-      list.push(exercise);
-    }
+        var draft = ensureDraft(store, activeDay);
+        var list = draft.exercises;
+        var exercise = list.find(function (item) {
+          return item.name.toLowerCase() === name.toLowerCase();
+        });
+        if (!exercise) {
+          exercise = { id: uid("ex"), name: name, sets: [] };
+          list.push(exercise);
+        }
 
-    exercise.sets.push({
-      id: uid("set"),
-      reps: reps,
-      weight: weight,
-      at: Date.now(),
-    });
-    var group = LIBRARY[Number(categorySelect.value)];
-    savePickerPrefs(group && group.category, name, reps, weight);
-    saveStore(store);
-    closeSheet();
-    renderSession();
-  });
-
-  finishBtn.addEventListener("click", function (event) {
-    event.stopPropagation();
-    if (finishBtn.disabled) return;
-
-    if (!finishArmed) {
-      finishArmed = true;
-      finishBtn.textContent = "Confirm";
-      return;
+        exercise.sets.push({
+          id: uid("set"),
+          reps: reps,
+          weight: weight,
+          at: Date.now(),
+        });
+        var group = LIBRARY[Number(categorySelect.value)];
+        savePickerPrefs(group && group.category, name, reps, weight);
+        saveStore(store);
+        closeSheet();
+        renderSession();
+      });
     }
 
-    syncDay();
-    var store = loadStore();
-    if (dayHasFinishedWorkout(store, activeDay)) {
-      finishMsg.textContent = "You already finished today’s workout.";
-      finishMsg.hidden = false;
-      finishMsg.style.color = "var(--signal)";
+    if (finishBtn) {
+      finishBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        if (finishBtn.disabled) return;
+
+        if (!finishArmed) {
+          finishArmed = true;
+          finishBtn.textContent = "Confirm";
+          return;
+        }
+
+        syncDay();
+        var store = loadStore();
+        if (dayHasFinishedWorkout(store, activeDay)) {
+          finishMsg.textContent = "You already finished today’s workout.";
+          finishMsg.hidden = false;
+          finishMsg.style.color = "var(--signal)";
+          resetFinishButton();
+          return;
+        }
+        if (!mergeDraftIntoDay(store, activeDay)) {
+          resetFinishButton();
+          return;
+        }
+        saveStore(store);
+        resetFinishButton();
+        renderSession();
+        if (typeof window.studioSetsWeekRefresh === "function") {
+          window.studioSetsWeekRefresh();
+        }
+        finishMsg.textContent = "Workout saved. Sets per week is updated.";
+        finishMsg.hidden = false;
+        finishMsg.style.color = "var(--fjord)";
+      });
+    }
+
+    document.addEventListener("click", function (event) {
+      if (!finishArmed) return;
+      if (event.target.closest("#finish-workout")) return;
       resetFinishButton();
-      return;
-    }
-    if (!mergeDraftIntoDay(store, activeDay)) {
-      resetFinishButton();
-      return;
-    }
-    saveStore(store);
-    resetFinishButton();
-    renderSession();
-    finishMsg.textContent = "Workout saved. Sets per week is updated.";
-    finishMsg.hidden = false;
-    finishMsg.style.color = "var(--fjord)";
-  });
-
-  document.addEventListener("click", function (event) {
-    if (!finishArmed) return;
-    if (event.target.closest("#finish-workout")) return;
-    resetFinishButton();
-  });
+    });
+  }
 
   function handleRemoveWorkout(date) {
     if (!date) return;
@@ -731,23 +777,27 @@
     var removed = removeWorkoutFromStore(store, date);
     if (!removed) return;
     saveStore(store);
-    renderSession();
+    refreshWorkoutViews();
     window.studioUndo.offer({
       message: "Workout removed",
       onUndo: function () {
         var s = loadStore();
         s.days[date] = removed;
         saveStore(s);
-        renderSession();
+        refreshWorkoutViews();
       },
     });
   }
 
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") renderSession();
+    if (document.visibilityState === "visible") refreshWorkoutViews();
   });
 
-  initCategories();
-  populateLibraryExercises();
-  renderSession();
+  if (hasTodayUI) {
+    initCategories();
+    populateLibraryExercises();
+    renderSession();
+  } else if (hasWeekUI) {
+    renderWeekWorkouts();
+  }
 })();

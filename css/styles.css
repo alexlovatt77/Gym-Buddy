@@ -58,6 +58,67 @@
   --nav-h: 3.25rem;
 }
 
+[data-theme="dark"] {
+  --paper: #121a22;
+  --paper-raised: #1a252f;
+  --ink: #e8eef3;
+  --ink-soft: #b8c5d0;
+  --muted: #8a9aa8;
+  --line: #2a3844;
+  --line-strong: #3d4f5c;
+  --fjord: #6eb3c4;
+  --fjord-soft: #8ec9d6;
+  --fjord-wash: rgba(110, 179, 196, 0.12);
+  --signal: #d4926f;
+  --ok: #6aab88;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  --glass-bg: rgba(26, 37, 47, 0.72);
+  --glass-bg-strong: rgba(40, 52, 64, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 36px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --glass-primary: rgba(42, 100, 120, 0.82);
+  --glass-primary-hover: rgba(62, 120, 140, 0.92);
+  --glass-primary-border: rgba(255, 255, 255, 0.16);
+  --glass-btn-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --glass-btn-shadow-hover:
+    0 4px 14px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glass-primary-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-primary-shadow-hover:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="dark"] body {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(42, 100, 120, 0.2), transparent 55%),
+    radial-gradient(90% 60% at 0% 100%, rgba(138, 75, 47, 0.1), transparent 50%),
+    linear-gradient(180deg, #0e1419 0%, var(--paper) 38%, #141c24 100%);
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+}
+
+[data-theme="dark"] .masthead,
+[data-theme="dark"] .tabbar {
+  background: rgba(18, 26, 34, 0.82);
+}
+
+[data-theme="dark"] .sheet__panel {
+  background: var(--paper-raised);
+}
+
+[data-theme="dark"] .mark.is-fail .mark__icon {
+  color: #e07a6a;
+}
+
 *,
 *::before,
 *::after {
@@ -1069,7 +1130,7 @@ a:hover {
   bottom: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   padding: 0 var(--space-1) env(safe-area-inset-bottom, 0px);
   background: var(--glass-bg);
