@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9eef2" />
+    <title>Weight tracking — Studio</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="masthead">
+        <p class="masthead__brand">Studio</p>
+        <p class="masthead__meta">06 · Bodyweight</p>
+      </header>
+
+      <main class="page">
+        <p class="page__kicker">Scale</p>
+        <h1 class="page__title">Weight tracking</h1>
+
+        <section class="section" aria-labelledby="log-weight">
+          <h2 class="section__title" id="log-weight">Today</h2>
+          <p class="section__note" id="today-label">—</p>
+
+          <form class="record-form" id="weight-form">
+            <div class="field">
+              <label id="weight-lbs-label">Weight</label>
+              <div class="record-form__weight" role="group" aria-labelledby="weight-lbs-label">
+                <select id="weight-whole" aria-label="Pounds" required></select>
+                <select id="weight-decimal" aria-label="Tenths of a pound" required></select>
+                <span class="record-form__unit">lbs</span>
+              </div>
+            </div>
+            <p class="field-error" id="weight-error" hidden></p>
+            <div class="btn-row">
+              <button class="btn" type="submit" id="weight-save">Save today’s weight</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="section" aria-labelledby="weight-chart-heading">
+          <h2 class="section__title" id="weight-chart-heading">Trend</h2>
+          <p class="section__note" id="chart-mode-note">Daily</p>
+          <div class="chart-block weight-chart-wrap">
+            <button
+              class="chart-mode-toggle"
+              type="button"
+              id="chart-mode-toggle"
+              aria-pressed="false"
+              aria-label="Switch to weekly Sunday averages"
+              title="Weekly"
+            >
+              W
+            </button>
+            <div
+              class="chart-frame"
+              id="weight-chart"
+              role="img"
+              aria-label="Bodyweight chart"
+            ></div>
+            <div class="chart-tooltip" id="weight-tooltip" hidden></div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="tabbar" aria-label="Primary">
+        <a href="workout.html"><span class="tabbar__word">Lift</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Sets</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
+        <a href="cardio-maxes.html"><span class="tabbar__word">Cardio</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
+        <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
+        <a href="settings.html"><span class="tabbar__word">Setup</span></a>
+      </nav>
+    </div>
+    <script src="js/app-data.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/weight.js"></script>
+  </body>
+</html>

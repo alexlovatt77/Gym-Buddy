@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9eef2" />
+    <title>Setup — Studio</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="masthead">
+        <p class="masthead__brand">Studio</p>
+        <p class="masthead__meta">Setup</p>
+      </header>
+
+      <main class="page">
+        <p class="page__kicker">Preferences</p>
+        <div class="setup-head">
+          <h1 class="page__title">Setup</h1>
+          <div class="setup-tabs" role="group" aria-label="Setup sections">
+            <button class="btn btn--ghost" type="button" id="setup-prev" aria-label="Previous section">
+              ←
+            </button>
+            <p class="setup-tabs__label" id="setup-tab-label">Weekly targets</p>
+            <button class="btn btn--ghost" type="button" id="setup-next" aria-label="Next section">
+              →
+            </button>
+          </div>
+        </div>
+
+        <div class="setup-panel" id="setup-panel-targets" data-setup-panel>
+          <section class="section" aria-labelledby="targets-heading">
+            <h2 class="section__title" id="targets-heading">Weekly targets</h2>
+
+            <form class="record-form" id="targets-form">
+              <div class="field">
+                <label for="target-glutes">Glutes</label>
+                <select id="target-glutes" required></select>
+              </div>
+              <div class="field">
+                <label for="target-quads">Quads</label>
+                <select id="target-quads" required></select>
+              </div>
+              <div class="field">
+                <label for="target-hamstrings">Hamstrings</label>
+                <select id="target-hamstrings" required></select>
+              </div>
+              <div class="field">
+                <label for="target-calves">Calves</label>
+                <select id="target-calves" required></select>
+              </div>
+              <div class="field">
+                <label for="target-chest">Chest</label>
+                <select id="target-chest" required></select>
+              </div>
+              <div class="field">
+                <label for="target-back">Back</label>
+                <select id="target-back" required></select>
+              </div>
+              <div class="field">
+                <label for="target-shoulders">Shoulders</label>
+                <select id="target-shoulders" required></select>
+              </div>
+              <div class="field">
+                <label for="target-biceps">Biceps</label>
+                <select id="target-biceps" required></select>
+              </div>
+              <div class="field">
+                <label for="target-triceps">Triceps</label>
+                <select id="target-triceps" required></select>
+              </div>
+              <div class="field">
+                <label for="target-traps">Traps</label>
+                <select id="target-traps" required></select>
+              </div>
+              <p class="field-error" id="targets-saved" hidden>Targets saved.</p>
+              <div class="btn-row">
+                <button class="btn" type="submit">Save targets</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <div class="setup-panel" id="setup-panel-meals" data-setup-panel hidden>
+          <section class="section" aria-labelledby="add-meal">
+            <h2 class="section__title" id="add-meal">Add a meal</h2>
+
+            <form class="entry" id="meal-form">
+              <p class="entry__title">New meal</p>
+              <div class="field">
+                <label for="meal-category">Category</label>
+                <select id="meal-category" required>
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="dinner">Dinner</option>
+                  <option value="snack">Snack</option>
+                  <option value="dessert">Dessert</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="meal-name">Name</label>
+                <input id="meal-name" type="text" placeholder="e.g. Oats with milk" required />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="meal-calories">Calories</label>
+                  <input id="meal-calories" type="number" min="0" step="1" placeholder="0" required />
+                </div>
+                <div class="field">
+                  <label for="meal-protein">Protein (g)</label>
+                  <input id="meal-protein" type="number" min="0" step="0.1" placeholder="0" required />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="meal-fat">Fat (g)</label>
+                  <input id="meal-fat" type="number" min="0" step="0.1" placeholder="0" required />
+                </div>
+                <div class="field">
+                  <label for="meal-carbs">Carbs (g)</label>
+                  <input id="meal-carbs" type="number" min="0" step="0.1" placeholder="0" required />
+                </div>
+              </div>
+              <p class="field-error" id="meal-error" hidden></p>
+              <div class="btn-row">
+                <button class="btn" type="submit">Save meal</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="section" aria-labelledby="library">
+            <h2 class="section__title" id="library">Meal library</h2>
+            <table class="ledger">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Name</th>
+                  <th class="num">kcal</th>
+                  <th class="num">P</th>
+                  <th class="num">F</th>
+                  <th class="num">C</th>
+                  <th class="num"></th>
+                </tr>
+              </thead>
+              <tbody id="meal-library">
+                <tr class="is-placeholder">
+                  <td colspan="7">No meals saved yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <div class="setup-panel" id="setup-panel-goals" data-setup-panel hidden>
+          <section class="section" aria-labelledby="goals-heading">
+            <h2 class="section__title" id="goals-heading">Macro goals</h2>
+
+            <form class="entry" id="goals-form">
+              <p class="entry__title">Current targets</p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="goal-calories">Calories</label>
+                  <input id="goal-calories" type="number" min="0" step="1" required />
+                </div>
+                <div class="field">
+                  <label for="goal-protein">Protein (g)</label>
+                  <input id="goal-protein" type="number" min="0" step="0.1" required />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="goal-fat">Fat (g)</label>
+                  <input id="goal-fat" type="number" min="0" step="0.1" required />
+                </div>
+                <div class="field">
+                  <label for="goal-carbs">Carbs (g)</label>
+                  <input id="goal-carbs" type="number" min="0" step="0.1" required />
+                </div>
+              </div>
+              <p class="field-error" id="goals-error" hidden></p>
+              <div class="btn-row">
+                <button class="btn" type="submit">Save goals</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <section class="section" aria-labelledby="data-heading">
+          <h2 class="section__title" id="data-heading">Data</h2>
+          <div class="btn-row">
+            <button class="btn btn--ghost" type="button" id="clear-all-data">Clear all data</button>
+          </div>
+        </section>
+      </main>
+
+      <nav class="tabbar" aria-label="Primary">
+        <a href="workout.html"><span class="tabbar__word">Lift</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Sets</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
+        <a href="cardio-maxes.html"><span class="tabbar__word">Cardio</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
+        <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
+        <a href="settings.html"><span class="tabbar__word">Setup</span></a>
+      </nav>
+    </div>
+    <script src="js/app-data.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/undo.js"></script>
+    <script src="js/meals-defaults.js"></script>
+    <script src="js/exercise-library.js"></script>
+    <script src="js/targets.js"></script>
+    <script src="js/settings.js"></script>
+  </body>
+</html>

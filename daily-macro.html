@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9eef2" />
+    <title>Daily macro — Studio</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="masthead">
+        <p class="masthead__brand">Studio</p>
+        <p class="masthead__meta">05 · Nutrition</p>
+      </header>
+
+      <main class="page">
+        <p class="page__kicker">Intake</p>
+        <h1 class="page__title">Daily macro</h1>
+
+        <section class="section" aria-labelledby="day-heading">
+          <h2 class="section__title" id="day-heading">Day</h2>
+          <div class="stat-row">
+            <span class="stat-row__label">Today</span>
+            <span class="stat-row__value" id="current-day-label">—</span>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="today">
+          <h2 class="section__title" id="today">Totals</h2>
+          <p class="section__note" id="goals-note">Goal: —</p>
+
+          <div class="stat-row">
+            <span class="stat-row__label">Calories</span>
+            <span class="stat-row__value" id="total-calories">0 / 3200 kcal</span>
+            <div class="progress" style="grid-column: 1 / -1" aria-hidden="true">
+              <div class="progress__bar" id="bar-calories" style="--pct: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row__label">Protein</span>
+            <span class="stat-row__value" id="total-protein">0 / 132 g</span>
+            <div class="progress" style="grid-column: 1 / -1" aria-hidden="true">
+              <div class="progress__bar" id="bar-protein" style="--pct: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row__label">Fat</span>
+            <span class="stat-row__value" id="total-fat">0 / 100 g</span>
+            <div class="progress" style="grid-column: 1 / -1" aria-hidden="true">
+              <div class="progress__bar" id="bar-fat" style="--pct: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row__label">Carbohydrate</span>
+            <span class="stat-row__value" id="total-carbs">0 / 443 g</span>
+            <div class="progress" style="grid-column: 1 / -1" aria-hidden="true">
+              <div class="progress__bar" id="bar-carbs" style="--pct: 0%"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="log-macro">
+          <h2 class="section__title" id="log-macro">Log a meal</h2>
+
+          <form class="entry" id="log-form">
+            <p class="entry__title">Add to day</p>
+            <div class="field">
+              <label for="log-category">Category</label>
+              <select id="log-category" required>
+                <option value="">Select category…</option>
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+                <option value="dessert">Dessert</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="log-meal">Meal</label>
+              <select id="log-meal" required disabled>
+                <option value="">Select category first…</option>
+              </select>
+            </div>
+            <p class="field-error" id="log-error" hidden></p>
+            <div class="btn-row">
+              <button class="btn" type="submit">Add to day</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="section" aria-labelledby="entries">
+          <h2 class="section__title" id="entries">Entries</h2>
+
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th>Meal</th>
+                <th class="num">kcal</th>
+                <th class="num">P</th>
+                <th class="num">F</th>
+                <th class="num">C</th>
+                <th class="num"></th>
+              </tr>
+            </thead>
+            <tbody id="entry-list">
+              <tr class="is-placeholder">
+                <td colspan="6">No entries yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" aria-labelledby="history-heading">
+          <h2 class="section__title" id="history-heading">History</h2>
+          <div class="btn-row">
+            <button class="btn" type="button" id="open-history">History</button>
+          </div>
+        </section>
+      </main>
+
+      <div class="sheet" id="history-sheet" hidden>
+        <div class="sheet__backdrop" data-close-history tabindex="-1"></div>
+        <div
+          class="sheet__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-sheet-title"
+        >
+          <div class="sheet__header">
+            <h2 class="sheet__title" id="history-sheet-title">History</h2>
+            <button class="sheet__close" type="button" data-close-history aria-label="Close">
+              Close
+            </button>
+          </div>
+
+          <div id="history-calendar-view">
+            <div class="cal-nav">
+              <button class="btn btn--ghost" type="button" id="cal-prev" aria-label="Previous month">
+                ←
+              </button>
+              <p class="cal-nav__label" id="cal-month-label">—</p>
+              <button class="btn btn--ghost" type="button" id="cal-next" aria-label="Next month">
+                →
+              </button>
+            </div>
+            <div class="cal-weekdays" aria-hidden="true">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+
+          <div id="history-day-view" hidden>
+            <button class="btn btn--ghost" type="button" id="history-back">← Calendar</button>
+            <h3 class="sheet__subtitle" id="history-day-title">—</h3>
+            <p class="section__note" id="history-day-goals-note">Goals that day: —</p>
+            <div class="history-marks" id="history-day-marks"></div>
+            <div class="stat-row">
+              <span class="stat-row__label">Calories</span>
+              <span class="stat-row__value" id="history-day-calories">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">Protein</span>
+              <span class="stat-row__value" id="history-day-protein">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">Fat</span>
+              <span class="stat-row__value" id="history-day-fat">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">Carbohydrate</span>
+              <span class="stat-row__value" id="history-day-carbs">—</span>
+            </div>
+            <h4 class="section__title" style="margin-top: 1.5rem">Meals</h4>
+            <table class="ledger">
+              <thead>
+                <tr>
+                  <th>Meal</th>
+                  <th class="num">kcal</th>
+                  <th class="num">P</th>
+                  <th class="num">F</th>
+                  <th class="num">C</th>
+                </tr>
+              </thead>
+              <tbody id="history-day-meals">
+                <tr class="is-placeholder">
+                  <td colspan="5">No entries</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <nav class="tabbar" aria-label="Primary">
+        <a href="workout.html"><span class="tabbar__word">Lift</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Sets</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
+        <a href="cardio-maxes.html"><span class="tabbar__word">Cardio</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
+        <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
+        <a href="settings.html"><span class="tabbar__word">Setup</span></a>
+      </nav>
+    </div>
+    <script src="js/app-data.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/undo.js"></script>
+    <script src="js/meals-defaults.js"></script>
+    <script src="js/macro.js"></script>
+  </body>
+</html>
