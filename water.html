@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9eef2" />
+    <script src="js/theme.js?v=3"></script>
+    <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
+    <title>Water — Gym Buddy</title>
+    <link rel="stylesheet" href="css/styles.css?v=6" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="masthead">
+        <p class="masthead__brand">Gym Buddy</p>
+      </header>
+
+      <main class="page">
+        <p class="page__kicker">Hydration</p>
+        <h1 class="page__title">Water</h1>
+
+        <section class="section" aria-labelledby="water-today">
+          <h2 class="section__title" id="water-today">Today</h2>
+          <p class="section__note" id="water-today-label">—</p>
+          <div class="water-log">
+            <button class="btn" type="button" id="water-add">1L</button>
+            <p class="water-log__total" id="water-total">0 L</p>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="water-calendar-heading">
+          <h2 class="section__title" id="water-calendar-heading">Calendar</h2>
+          <div class="cal-nav">
+            <button class="btn btn--ghost" type="button" id="water-cal-prev" aria-label="Previous month">
+              ←
+            </button>
+            <p class="cal-nav__label" id="water-cal-label">—</p>
+            <button class="btn btn--ghost" type="button" id="water-cal-next" aria-label="Next month">
+              →
+            </button>
+          </div>
+          <div class="cal-weekdays" aria-hidden="true">
+            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="water-cal-grid"></div>
+        </section>
+      </main>
+
+      <nav class="tabbar" aria-label="Primary">
+        <a href="today.html"><span class="tabbar__word">Day</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Week</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Maxes</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macros</span></a>
+        <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
+        <a href="water.html"><span class="tabbar__word">Water</span></a>
+        <a href="settings.html"><span class="tabbar__word">Settings</span></a>
+      </nav>
+    </div>
+    <script src="js/app-data.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/undo.js"></script>
+    <script src="js/water.js"></script>
+  </body>
+</html>

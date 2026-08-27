@@ -529,7 +529,7 @@
   document.getElementById("clear-all-data").addEventListener("click", function () {
     if (
       !confirm(
-        "Clear all saved workouts, maxes, cardio, macros, weight, and settings data? This cannot be undone."
+        "Clear all saved workouts, maxes, cardio, macros, weight, water, and settings data? This cannot be undone."
       )
     ) {
       return;

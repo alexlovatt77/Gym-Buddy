@@ -9,6 +9,7 @@
     "studio.cardio.runs",
     "studio.macro.v1",
     "studio.weight.v2",
+    "studio.water.v1",
     "studio.sets.targets.v3",
     "studio.sets.targets.v2",
     "studio.theme.v1",
