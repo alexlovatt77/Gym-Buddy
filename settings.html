@@ -207,7 +207,21 @@
 
         <section class="section" aria-labelledby="data-heading">
           <h2 class="section__title" id="data-heading">Data</h2>
+          <p class="section__note">
+            Export downloads a backup file you can save in Files (or Downloads). Use Restore to load it later.
+          </p>
           <div class="btn-row">
+            <button class="btn" type="button" id="export-backup">Export backup</button>
+            <button class="btn btn--ghost" type="button" id="restore-backup">Restore backup</button>
+            <input
+              type="file"
+              id="restore-backup-file"
+              accept="application/json,.json"
+              hidden
+            />
+          </div>
+          <p class="field-error" id="backup-msg" hidden></p>
+          <div class="btn-row" style="margin-top: var(--space-4)">
             <button class="btn btn--ghost" type="button" id="clear-all-data">Clear all data</button>
           </div>
         </section>

@@ -402,6 +402,84 @@
     });
   }
 
+  document.getElementById("export-backup").addEventListener("click", function () {
+    var msg = document.getElementById("backup-msg");
+    try {
+      if (typeof window.studioDownloadBackup !== "function") {
+        throw new Error("Backup is not available.");
+      }
+      window.studioDownloadBackup();
+      if (msg) {
+        msg.hidden = false;
+        msg.classList.remove("field-error");
+        msg.classList.add("section__note");
+        msg.textContent =
+          "Backup downloaded. On iPhone, check Files → Downloads (or where Safari asked you to save).";
+      }
+    } catch (err) {
+      if (msg) {
+        msg.hidden = false;
+        msg.classList.add("field-error");
+        msg.classList.remove("section__note");
+        msg.textContent = err.message || "Could not export backup.";
+      }
+    }
+  });
+
+  var restoreBtn = document.getElementById("restore-backup");
+  var restoreFile = document.getElementById("restore-backup-file");
+  if (restoreBtn && restoreFile) {
+    restoreBtn.addEventListener("click", function () {
+      restoreFile.value = "";
+      restoreFile.click();
+    });
+
+    restoreFile.addEventListener("change", function () {
+      var msg = document.getElementById("backup-msg");
+      var file = restoreFile.files && restoreFile.files[0];
+      if (!file) return;
+      if (
+        !confirm(
+          "Restore this backup? It will replace workouts, macros, weight, maxes, and settings currently on this device."
+        )
+      ) {
+        restoreFile.value = "";
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var backup = JSON.parse(String(reader.result || ""));
+          window.studioImportBackup(backup);
+          if (msg) {
+            msg.hidden = false;
+            msg.classList.remove("field-error");
+            msg.classList.add("section__note");
+            msg.textContent = "Backup restored.";
+          }
+          location.reload();
+        } catch (err) {
+          if (msg) {
+            msg.hidden = false;
+            msg.classList.add("field-error");
+            msg.classList.remove("section__note");
+            msg.textContent = err.message || "Could not restore that file.";
+          }
+        }
+      };
+      reader.onerror = function () {
+        if (msg) {
+          msg.hidden = false;
+          msg.classList.add("field-error");
+          msg.classList.remove("section__note");
+          msg.textContent = "Could not read that file.";
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   document.getElementById("clear-all-data").addEventListener("click", function () {
     if (
       !confirm(
