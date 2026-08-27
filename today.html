@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#e9eef2" />
     <script src="js/theme.js"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
-    <title>Today — Gym Buddy</title>
+    <title>Day — Gym Buddy</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -17,11 +17,41 @@
 
       <main class="page">
         <p class="page__kicker">Live log</p>
-        <h1 class="page__title">Today</h1>
+        <h1 class="page__title">Day</h1>
 
         <section class="section" aria-labelledby="session-day">
-          <h2 class="section__title" id="session-day">Today</h2>
+          <h2 class="section__title" id="session-day">Day</h2>
           <p class="section__note" id="session-date">—</p>
+        </section>
+
+        <section class="section" aria-labelledby="log-weight" data-weight-day-lock>
+          <h2 class="section__title" id="log-weight">Weight</h2>
+          <p class="section__note" id="weight-today-label">—</p>
+
+          <div id="weight-form-wrap">
+            <form class="record-form" id="weight-form">
+              <div class="field">
+                <label id="weight-lbs-label">Weight</label>
+                <div class="record-form__weight" role="group" aria-labelledby="weight-lbs-label">
+                  <select id="weight-whole" aria-label="Pounds" required></select>
+                  <select id="weight-decimal" aria-label="Tenths of a pound" required></select>
+                  <span class="record-form__unit">lbs</span>
+                </div>
+              </div>
+              <p class="field-error" id="weight-error" hidden></p>
+              <div class="btn-row">
+                <button class="btn" type="submit" id="weight-save">Save today’s weight</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="weight-locked" hidden>
+            <div class="stat-row">
+              <span class="stat-row__label">Logged</span>
+              <span class="stat-row__value" id="weight-locked-value">—</span>
+            </div>
+            <p class="section__note">Locked for today. Change it on the Weight tab.</p>
+          </div>
         </section>
 
         <section class="section" aria-labelledby="session-list-heading">
@@ -36,31 +66,10 @@
           </div>
         </section>
 
-        <section class="section" aria-labelledby="log-weight">
-          <h2 class="section__title" id="log-weight">Weight</h2>
-          <p class="section__note" id="weight-today-label">—</p>
-
-          <form class="record-form" id="weight-form">
-            <div class="field">
-              <label id="weight-lbs-label">Weight</label>
-              <div class="record-form__weight" role="group" aria-labelledby="weight-lbs-label">
-                <select id="weight-whole" aria-label="Pounds" required></select>
-                <select id="weight-decimal" aria-label="Tenths of a pound" required></select>
-                <span class="record-form__unit">lbs</span>
-              </div>
-            </div>
-            <p class="field-error" id="weight-error" hidden></p>
-            <div class="btn-row">
-              <button class="btn" type="submit" id="weight-save">Save today’s weight</button>
-            </div>
-          </form>
-        </section>
-
         <section class="section" aria-labelledby="log-macro">
           <h2 class="section__title" id="log-macro">Log a meal</h2>
 
           <form class="entry" id="log-form">
-            <p class="entry__title">Add to day</p>
             <div class="field">
               <label for="log-category">Category</label>
               <select id="log-category" required>
@@ -132,10 +141,10 @@
       </div>
 
       <nav class="tabbar" aria-label="Primary">
-        <a href="today.html"><span class="tabbar__word">Today</span></a>
-        <a href="sets-per-week.html"><span class="tabbar__word">This week</span></a>
-        <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
-        <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
+        <a href="today.html"><span class="tabbar__word">Day</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Week</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Maxes</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macros</span></a>
         <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>

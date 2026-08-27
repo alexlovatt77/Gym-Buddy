@@ -62,19 +62,71 @@
             <div class="chart-tooltip" id="weight-tooltip" hidden></div>
           </div>
         </section>
+
+        <section class="section" aria-labelledby="weight-history-heading">
+          <h2 class="section__title" id="weight-history-heading">History</h2>
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="num">Weight</th>
+                <th class="num"></th>
+              </tr>
+            </thead>
+            <tbody id="weight-history-body">
+              <tr class="is-placeholder">
+                <td colspan="3">No weigh-ins yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
       </main>
 
+      <div class="sheet" id="edit-weight-sheet" hidden>
+        <div class="sheet__backdrop" data-close-edit tabindex="-1"></div>
+        <div
+          class="sheet__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-weight-title"
+        >
+          <div class="sheet__header">
+            <h2 class="sheet__title" id="edit-weight-title">Update weight</h2>
+            <button class="sheet__close" type="button" data-close-edit aria-label="Close">
+              Close
+            </button>
+          </div>
+          <form class="record-form" id="edit-weight-form">
+            <p class="section__note" id="edit-weight-date">—</p>
+            <div class="field">
+              <label id="edit-weight-lbs-label">Weight</label>
+              <div class="record-form__weight" role="group" aria-labelledby="edit-weight-lbs-label">
+                <select id="edit-weight-whole" aria-label="Pounds" required></select>
+                <select id="edit-weight-decimal" aria-label="Tenths of a pound" required></select>
+                <span class="record-form__unit">lbs</span>
+              </div>
+            </div>
+            <p class="field-error" id="edit-weight-error" hidden></p>
+            <div class="btn-row">
+              <button class="btn" type="submit">Save weight</button>
+              <button class="btn btn--ghost" type="button" id="edit-weight-remove">Remove</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <nav class="tabbar" aria-label="Primary">
-        <a href="today.html"><span class="tabbar__word">Today</span></a>
-        <a href="sets-per-week.html"><span class="tabbar__word">This week</span></a>
-        <a href="exercise-maxes.html"><span class="tabbar__word">Max</span></a>
-        <a href="daily-macro.html"><span class="tabbar__word">Macro</span></a>
+        <a href="today.html"><span class="tabbar__word">Day</span></a>
+        <a href="sets-per-week.html"><span class="tabbar__word">Week</span></a>
+        <a href="exercise-maxes.html"><span class="tabbar__word">Maxes</span></a>
+        <a href="daily-macro.html"><span class="tabbar__word">Macros</span></a>
         <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
     <script src="js/app-data.js"></script>
     <script src="js/nav.js"></script>
+    <script src="js/undo.js"></script>
     <script src="js/weight.js"></script>
   </body>
 </html>

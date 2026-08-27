@@ -53,6 +53,16 @@
       .join("");
   }
 
+  function fillDecimalSelect(select) {
+    select.innerHTML = range(0, 0.9, 0.1)
+      .map(function (v) {
+        var value = v.toFixed(1);
+        var label = "." + value.split(".")[1];
+        return '<option value="' + value + '">' + label + "</option>";
+      })
+      .join("");
+  }
+
   function setSelectValue(select, value) {
     select.value = String(value);
   }
@@ -166,16 +176,26 @@
   var errorEl = document.getElementById("weight-error");
   var tooltip = document.getElementById("weight-tooltip");
   var chartEl = document.getElementById("weight-chart");
+  var historyBody = document.getElementById("weight-history-body");
+  var dayLockMode = !!document.querySelector("[data-weight-day-lock]");
+  var formWrap = document.getElementById("weight-form-wrap");
+  var lockedEl = document.getElementById("weight-locked");
+  var lockedValueEl = document.getElementById("weight-locked-value");
   var hasChart = !!chartEl;
 
+  var editSheet = document.getElementById("edit-weight-sheet");
+  var editWholeSelect = document.getElementById("edit-weight-whole");
+  var editDecimalSelect = document.getElementById("edit-weight-decimal");
+  var editDateLabel = document.getElementById("edit-weight-date");
+  var editError = document.getElementById("edit-weight-error");
+  var editingDate = null;
+
   fillSelect(wholeSelect, range(0, 400, 1));
-  decimalSelect.innerHTML = range(0, 0.9, 0.1)
-    .map(function (v) {
-      var value = v.toFixed(1);
-      var label = "." + value.split(".")[1];
-      return '<option value="' + value + '">' + label + "</option>";
-    })
-    .join("");
+  fillDecimalSelect(decimalSelect);
+  if (editWholeSelect && editDecimalSelect) {
+    fillSelect(editWholeSelect, range(0, 400, 1));
+    fillDecimalSelect(editDecimalSelect);
+  }
 
   function splitWeight(weight) {
     var n = Math.round(Number(weight) * 10) / 10;
@@ -184,20 +204,35 @@
     return { whole: whole, decimal: decimal };
   }
 
+  function combinedFrom(wholeEl, decimalEl) {
+    return Math.round((Number(wholeEl.value) + Number(decimalEl.value)) * 10) / 10;
+  }
+
   function combinedWeight() {
-    return Math.round((Number(wholeSelect.value) + Number(decimalSelect.value)) * 10) / 10;
+    return combinedFrom(wholeSelect, decimalSelect);
+  }
+
+  function setWeightSelectsOn(wholeEl, decimalEl, weight) {
+    var parts = splitWeight(weight);
+    setSelectValue(wholeEl, parts.whole);
+    setSelectValue(decimalEl, parts.decimal.toFixed(1));
   }
 
   function setWeightSelects(weight) {
-    var parts = splitWeight(weight);
-    setSelectValue(wholeSelect, parts.whole);
-    setSelectValue(decimalSelect, parts.decimal.toFixed(1));
+    setWeightSelectsOn(wholeSelect, decimalSelect, weight);
   }
 
   function entryForToday(store) {
     var today = todayISO();
     for (var i = 0; i < store.entries.length; i++) {
       if (store.entries[i].date === today) return store.entries[i];
+    }
+    return null;
+  }
+
+  function entryForDate(store, date) {
+    for (var i = 0; i < store.entries.length; i++) {
+      if (store.entries[i].date === date) return store.entries[i];
     }
     return null;
   }
@@ -274,6 +309,15 @@
     note.textContent = isWeekly ? "Weekly" : "Daily";
   }
 
+  function setDayLocked(locked, weight) {
+    if (!dayLockMode || !formWrap || !lockedEl) return;
+    formWrap.hidden = locked;
+    lockedEl.hidden = !locked;
+    if (locked && lockedValueEl) {
+      lockedValueEl.textContent = formatLbs(weight);
+    }
+  }
+
   function renderForm() {
     var store = loadStore();
     var labelEl =
@@ -281,11 +325,100 @@
       document.getElementById("weight-today-label");
     if (labelEl) labelEl.textContent = formatDateFull(todayISO());
     var existing = entryForToday(store);
+
+    if (dayLockMode && existing) {
+      setDayLocked(true, existing.weight);
+      return;
+    }
+
+    setDayLocked(false);
     setWeightSelects(existing ? existing.weight : 180);
     var saveBtn = document.getElementById("weight-save");
     if (saveBtn) {
       saveBtn.textContent = existing ? "Update today’s weight" : "Save today’s weight";
     }
+  }
+
+  function renderHistory() {
+    if (!historyBody) return;
+    var entries = dedupeByDate(loadStore().entries).slice().reverse();
+    if (!entries.length) {
+      historyBody.innerHTML =
+        '<tr class="is-placeholder"><td colspan="3">No weigh-ins yet</td></tr>';
+      return;
+    }
+    historyBody.innerHTML = entries
+      .map(function (entry) {
+        return (
+          "<tr>" +
+          "<td>" +
+          escapeHtml(formatDateFull(entry.date)) +
+          "</td>" +
+          '<td class="num">' +
+          escapeHtml(formatLbs(entry.weight)) +
+          "</td>" +
+          '<td class="num"><div class="history-actions">' +
+          '<button type="button" data-edit-weight="' +
+          escapeHtml(entry.date) +
+          '">Update</button></div></td>' +
+          "</tr>"
+        );
+      })
+      .join("");
+  }
+
+  function refresh() {
+    renderForm();
+    renderChart();
+    renderHistory();
+  }
+
+  function openEditWeight(date) {
+    if (!editSheet || !editWholeSelect || !editDecimalSelect) return;
+    var entry = entryForDate(loadStore(), date);
+    if (!entry) return;
+    editingDate = date;
+    if (editError) editError.hidden = true;
+    if (editDateLabel) editDateLabel.textContent = formatDateFull(date);
+    setWeightSelectsOn(editWholeSelect, editDecimalSelect, entry.weight);
+    editSheet.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeEditWeight() {
+    editingDate = null;
+    if (!editSheet) return;
+    editSheet.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function upsertWeight(date, weight) {
+    var store = loadStore();
+    var found = false;
+    store.entries = store.entries.map(function (entry) {
+      if (entry.date === date) {
+        found = true;
+        return { date: date, weight: weight, updatedAt: Date.now() };
+      }
+      return entry;
+    });
+    if (!found) {
+      store.entries.push({ date: date, weight: weight, updatedAt: Date.now() });
+    }
+    saveStore(store);
+  }
+
+  function removeWeight(date) {
+    var store = loadStore();
+    var removed = null;
+    store.entries.forEach(function (entry) {
+      if (entry.date === date) removed = entry;
+    });
+    store.entries = store.entries.filter(function (entry) {
+      return entry.date !== date;
+    });
+    saveStore(store);
+    return removed;
   }
 
   function renderChart() {
@@ -578,34 +711,78 @@
   var weightForm = document.getElementById("weight-form");
   if (weightForm) {
     weightForm.addEventListener("submit", function (event) {
-    event.preventDefault();
-    errorEl.hidden = true;
-    var weight = combinedWeight();
-    if (!isFinite(weight) || weight < 0) {
-      errorEl.textContent = "Choose a weight.";
-      errorEl.hidden = false;
-      return;
-    }
-
-    var store = loadStore();
-    var today = todayISO();
-    var found = false;
-    store.entries = store.entries.map(function (entry) {
-      if (entry.date === today) {
-        found = true;
-        return { date: today, weight: weight, updatedAt: Date.now() };
+      event.preventDefault();
+      if (errorEl) errorEl.hidden = true;
+      var weight = combinedWeight();
+      if (!isFinite(weight) || weight < 0) {
+        if (errorEl) {
+          errorEl.textContent = "Choose a weight.";
+          errorEl.hidden = false;
+        }
+        return;
       }
-      return entry;
-    });
-    if (!found) {
-      store.entries.push({ date: today, weight: weight, updatedAt: Date.now() });
-    }
-    saveStore(store);
-    renderForm();
-    renderChart();
+      upsertWeight(todayISO(), weight);
+      refresh();
     });
   }
 
-  renderForm();
-  renderChart();
+  if (historyBody) {
+    historyBody.addEventListener("click", function (event) {
+      var btn = event.target.closest("[data-edit-weight]");
+      if (!btn) return;
+      openEditWeight(btn.getAttribute("data-edit-weight"));
+    });
+  }
+
+  if (editSheet) {
+    var editForm = document.getElementById("edit-weight-form");
+    if (editForm) {
+      editForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (!editingDate || !editWholeSelect || !editDecimalSelect) return;
+        if (editError) editError.hidden = true;
+        var weight = combinedFrom(editWholeSelect, editDecimalSelect);
+        if (!isFinite(weight) || weight < 0) {
+          if (editError) {
+            editError.textContent = "Choose a weight.";
+            editError.hidden = false;
+          }
+          return;
+        }
+        upsertWeight(editingDate, weight);
+        closeEditWeight();
+        refresh();
+      });
+    }
+
+    var removeBtn = document.getElementById("edit-weight-remove");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", function () {
+        if (!editingDate) return;
+        var date = editingDate;
+        var removed = removeWeight(date);
+        closeEditWeight();
+        refresh();
+        if (removed && window.studioUndo) {
+          window.studioUndo.offer({
+            message: "Weigh-in removed",
+            onUndo: function () {
+              upsertWeight(removed.date, removed.weight);
+              refresh();
+            },
+          });
+        }
+      });
+    }
+
+    editSheet.addEventListener("click", function (event) {
+      if (event.target.closest("[data-close-edit]")) closeEditWeight();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !editSheet.hidden) closeEditWeight();
+    });
+  }
+
+  refresh();
 })();
