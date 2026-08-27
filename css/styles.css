@@ -454,18 +454,19 @@
 [data-theme="fallout"] .ledger th {
   color: #071109;
   font-family: "Share Tech Mono", monospace;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      #ffcf38 0,
-      #ffcf38 7px,
-      #c99c20 7px,
-      #c99c20 14px
-    );
-  text-shadow: 0 1px rgba(255, 239, 146, 0.8);
-  border-color: #c99c20;
+  background-color: #ffcf38;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #ffe566 0,
+    #ffe566 7px,
+    #ffcf38 7px,
+    #ffcf38 14px
+  );
+  text-shadow: none;
+  border-color: #ffcf38;
 }
 
 [data-theme="fallout"] .ledger th,
