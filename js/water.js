@@ -83,7 +83,7 @@
     var label = document.getElementById("water-today-label");
     var total = document.getElementById("water-total");
     if (label) label.textContent = formatDateFull(today);
-    if (total) total.textContent = formatLiters(litersFor(store, today));
+    if (total) total.textContent = formatTotal(litersFor(store, today));
   }
 
   function renderCalendar() {
