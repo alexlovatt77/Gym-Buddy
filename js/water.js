@@ -63,9 +63,13 @@
   }
 
   function formatLiters(n) {
-    if (!n) return "0 L";
+    if (!n) return "0L";
     var r = Math.round(Number(n) * 10) / 10;
-    return (Number.isInteger(r) ? String(r) : r.toFixed(1)) + " L";
+    return (Number.isInteger(r) ? String(r) : r.toFixed(1)) + "L";
+  }
+
+  function formatTotal(n) {
+    return "Total " + formatLiters(n);
   }
 
   var calCursor = (function () {
