@@ -350,16 +350,44 @@
     if (!tbody) return;
     var date = selectedDateISO();
     var entries = dayEntries(store, date).slice().reverse();
+    var compact = !document.getElementById("total-calories");
+    var cols = compact ? 3 : 6;
 
     if (!entries.length) {
       tbody.innerHTML =
-        '<tr class="is-placeholder"><td colspan="6">No entries yet</td></tr>';
+        '<tr class="is-placeholder"><td colspan="' +
+        cols +
+        '">' +
+        (compact ? "No meals yet" : "No entries yet") +
+        "</td></tr>";
       return;
     }
 
     tbody.innerHTML = entries
       .map(function (entry) {
         var cat = CATEGORY_LABEL[entry.category] || entry.category;
+        var removeBtn =
+          '<td class="num"><div class="history-actions">' +
+          '<button type="button" data-remove-entry="' +
+          escapeHtml(entry.id) +
+          '">Remove</button></div></td>';
+
+        if (compact) {
+          return (
+            "<tr>" +
+            "<td>" +
+            escapeHtml(entry.name) +
+            '<span class="entry-cat"> · ' +
+            escapeHtml(cat) +
+            "</span></td>" +
+            '<td class="num">' +
+            formatNum(entry.calories) +
+            "</td>" +
+            removeBtn +
+            "</tr>"
+          );
+        }
+
         return (
           "<tr>" +
           "<td>" +
@@ -379,10 +407,7 @@
           '<td class="num">' +
           formatNum(entry.carbs) +
           "</td>" +
-          '<td class="num"><div class="history-actions">' +
-          '<button type="button" data-remove-entry="' +
-          escapeHtml(entry.id) +
-          '">Remove</button></div></td>' +
+          removeBtn +
           "</tr>"
         );
       })
