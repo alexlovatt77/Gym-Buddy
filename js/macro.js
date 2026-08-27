@@ -46,6 +46,7 @@
   function emptyStore() {
     return {
       meals: [],
+      defaultMealsSeeded: false,
       logs: {},
       goalsCurrent: cloneGoals(DEFAULT_GOALS),
       dayGoals: {},
@@ -60,6 +61,12 @@
         var data = JSON.parse(raw);
         store = {
           meals: Array.isArray(data.meals) ? data.meals : [],
+          // Legacy stores have already received their defaults. Mark them seeded
+          // so a deliberately removed default meal is not recreated.
+          defaultMealsSeeded:
+            typeof data.defaultMealsSeeded === "boolean"
+              ? data.defaultMealsSeeded
+              : true,
           logs: data.logs && typeof data.logs === "object" ? data.logs : {},
           goalsCurrent: normalizeGoals(data.goalsCurrent || DEFAULT_GOALS),
           dayGoals:

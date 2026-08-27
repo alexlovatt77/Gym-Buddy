@@ -40,11 +40,11 @@ window.STUDIO_DEFAULT_MEALS = [
 
 window.studioEnsureDefaultMeals = function (store) {
   if (!store || !Array.isArray(store.meals)) return false;
+  if (store.defaultMealsSeeded) return false;
   var byId = {};
   store.meals.forEach(function (meal) {
     if (meal && meal.id) byId[meal.id] = true;
   });
-  var changed = false;
   (window.STUDIO_DEFAULT_MEALS || []).forEach(function (meal) {
     if (byId[meal.id]) return;
     store.meals.push({
@@ -56,7 +56,7 @@ window.studioEnsureDefaultMeals = function (store) {
       fat: meal.fat,
       carbs: meal.carbs,
     });
-    changed = true;
   });
-  return changed;
+  store.defaultMealsSeeded = true;
+  return true;
 };

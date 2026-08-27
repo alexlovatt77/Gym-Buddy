@@ -82,6 +82,7 @@
   function emptyMacroStore() {
     return {
       meals: [],
+      defaultMealsSeeded: false,
       logs: {},
       goalsCurrent: { calories: 3200, protein: 132, fat: 100, carbs: 443 },
       dayGoals: {},
@@ -133,6 +134,11 @@
         var data = JSON.parse(raw);
         store = {
           meals: Array.isArray(data.meals) ? data.meals : [],
+          // Older saved stores were seeded before this marker existed.
+          defaultMealsSeeded:
+            typeof data.defaultMealsSeeded === "boolean"
+              ? data.defaultMealsSeeded
+              : true,
           logs: data.logs && typeof data.logs === "object" ? data.logs : {},
           goalsCurrent: normalizeGoals(
             data.goalsCurrent || emptyMacroStore().goalsCurrent
