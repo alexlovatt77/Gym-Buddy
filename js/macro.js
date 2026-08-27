@@ -88,6 +88,7 @@
     } catch (err) {
       console.warn("Could not read macro store", err);
       var fallback = emptyStore();
+      fallback._readError = true;
       if (typeof window.studioEnsureDefaultMeals === "function") {
         window.studioEnsureDefaultMeals(fallback);
       }
@@ -96,6 +97,8 @@
   }
 
   function saveStore(store) {
+    // Never overwrite real data with an empty fallback after a read failure.
+    if (store && store._readError) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   }
 

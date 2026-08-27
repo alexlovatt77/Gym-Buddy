@@ -93,6 +93,24 @@
             </div>
           </form>
         </section>
+
+        <section class="section" aria-labelledby="day-meals">
+          <h2 class="section__title" id="day-meals">Today’s meals</h2>
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th>Meal</th>
+                <th class="num">kcal</th>
+                <th class="num"></th>
+              </tr>
+            </thead>
+            <tbody id="entry-list">
+              <tr class="is-placeholder">
+                <td colspan="3">No meals yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
       </main>
 
       <div class="sheet" id="add-set-sheet" hidden>
@@ -157,6 +175,6 @@
     <script src="js/meals-defaults.js?v=2"></script>
     <script src="js/workout.js"></script>
     <script src="js/weight.js"></script>
-    <script src="js/macro.js?v=2"></script>
+    <script src="js/macro.js?v=3"></script>
   </body>
 </html>
