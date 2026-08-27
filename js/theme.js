@@ -15,14 +15,22 @@
 
   function resolve(mode) {
     if (mode === "system") {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      try {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      } catch (err) {
+        return "light";
+      }
     }
     if (mode === "dark" || mode === "fallout") return mode;
     return "light";
   }
 
   function applyResolved(resolved) {
-    document.documentElement.setAttribute("data-theme", resolved);
+    var root = document.documentElement;
+    root.setAttribute("data-theme", resolved);
+    root.classList.remove("theme-light", "theme-dark", "theme-fallout");
+    root.classList.add("theme-" + resolved);
+
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
       var colors = {
@@ -40,16 +48,25 @@
 
   apply(getStoredMode());
 
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
-    if (getStoredMode() === "system") apply("system");
-  });
+  try {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+      if (getStoredMode() === "system") apply("system");
+    });
+  } catch (err) {
+    /* older browsers */
+  }
 
   window.studioTheme = {
     getMode: getStoredMode,
     setMode: function (mode) {
       if (MODES.indexOf(mode) < 0) mode = "light";
-      localStorage.setItem(KEY, mode);
+      try {
+        localStorage.setItem(KEY, mode);
+      } catch (err) {
+        /* private mode */
+      }
       apply(mode);
+      return mode;
     },
     resolve: resolve,
   };

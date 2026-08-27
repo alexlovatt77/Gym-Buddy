@@ -418,11 +418,34 @@
   fillGoalsForm();
 
   var themeSelect = document.getElementById("theme-mode");
+  var themeNote = document.getElementById("theme-note");
+
+  function updateThemeNote(mode) {
+    if (!themeNote) return;
+    if (mode === "fallout") {
+      themeNote.textContent = "Fallout mode active — Pip-Boy terminal online.";
+    } else if (mode === "dark") {
+      themeNote.textContent = "Dark mode active.";
+    } else if (mode === "system") {
+      themeNote.textContent = "Match system follows your phone’s light/dark setting.";
+    } else {
+      themeNote.textContent = "Light is the default. Fallout activates the full Pip-Boy terminal experience.";
+    }
+  }
+
+  function applyThemeFromSelect() {
+    if (!themeSelect || !window.studioTheme) return;
+    var mode = window.studioTheme.setMode(themeSelect.value);
+    // Keep the select in sync with what actually applied.
+    themeSelect.value = mode;
+    updateThemeNote(mode);
+  }
+
   if (themeSelect && window.studioTheme) {
     themeSelect.value = window.studioTheme.getMode();
-    themeSelect.addEventListener("change", function () {
-      window.studioTheme.setMode(themeSelect.value);
-    });
+    updateThemeNote(themeSelect.value);
+    themeSelect.addEventListener("change", applyThemeFromSelect);
+    themeSelect.addEventListener("input", applyThemeFromSelect);
   }
 
   document.getElementById("export-backup").addEventListener("click", function () {
