@@ -195,7 +195,8 @@
   position: fixed;
   z-index: 100;
   inset: 0;
-  pointer-events: none;
+  pointer-events: none !important;
+  touch-action: none;
   opacity: 0.22;
   background: repeating-linear-gradient(
     180deg,
@@ -391,7 +392,6 @@
 [data-theme="fallout"] .session-exercise__add,
 [data-theme="fallout"] .session-exercise__undo,
 [data-theme="fallout"] .session-remove-workout,
-[data-theme="fallout"] .history-actions button,
 [data-theme="fallout"] .sheet__close,
 [data-theme="fallout"] .chart-mode-toggle {
   color: #031006;
@@ -404,6 +404,19 @@
   border: 1px solid var(--glass-primary-border);
   border-radius: 0;
   clip-path: polygon(0.45rem 0, 100% 0, 100% calc(100% - 0.45rem), calc(100% - 0.45rem) 100%, 0 100%, 0 0.45rem);
+}
+
+[data-theme="fallout"] .history-actions button {
+  color: #031006;
+  font-family: "Share Tech Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: none;
+  background: var(--glass-primary);
+  border: 1px solid var(--glass-primary-border);
+  border-radius: 0;
+  clip-path: none;
 }
 
 [data-theme="fallout"] .btn:hover,

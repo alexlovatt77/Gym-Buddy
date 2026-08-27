@@ -83,6 +83,7 @@
     return {
       meals: [],
       defaultMealsSeeded: false,
+      removedMealIds: [],
       logs: {},
       goalsCurrent: { calories: 3200, protein: 132, fat: 100, carbs: 443 },
       dayGoals: {},
@@ -130,6 +131,7 @@
     try {
       var raw = localStorage.getItem(MACRO_KEY);
       var store = emptyMacroStore();
+      var needsPersist = false;
       if (raw) {
         var data = JSON.parse(raw);
         store = {
@@ -139,6 +141,9 @@
             typeof data.defaultMealsSeeded === "boolean"
               ? data.defaultMealsSeeded
               : true,
+          removedMealIds: Array.isArray(data.removedMealIds)
+            ? data.removedMealIds.map(String)
+            : [],
           logs: data.logs && typeof data.logs === "object" ? data.logs : {},
           goalsCurrent: normalizeGoals(
             data.goalsCurrent || emptyMacroStore().goalsCurrent
@@ -146,10 +151,13 @@
           dayGoals:
             data.dayGoals && typeof data.dayGoals === "object" ? data.dayGoals : {},
         };
+        if (typeof data.defaultMealsSeeded !== "boolean") needsPersist = true;
+        if (!Array.isArray(data.removedMealIds)) needsPersist = true;
       }
       if (typeof window.studioEnsureDefaultMeals === "function") {
-        if (window.studioEnsureDefaultMeals(store)) saveMacroStore(store);
+        if (window.studioEnsureDefaultMeals(store)) needsPersist = true;
       }
+      if (needsPersist) saveMacroStore(store);
       return store;
     } catch (err) {
       console.warn("Could not read macro store", err);
@@ -324,16 +332,22 @@
   document.body.addEventListener("click", function (event) {
     var mealBtn = event.target.closest("[data-remove-meal]");
     if (!mealBtn) return;
-    var mealId = mealBtn.getAttribute("data-remove-meal");
+    event.preventDefault();
+    var mealId = String(mealBtn.getAttribute("data-remove-meal") || "");
+    if (!mealId) return;
     var store = loadMacroStore();
     var removedMeal = null;
     store.meals.forEach(function (meal) {
-      if (meal.id === mealId) removedMeal = meal;
+      if (String(meal.id) === mealId) removedMeal = meal;
     });
     if (!removedMeal) return;
     store.meals = store.meals.filter(function (meal) {
-      return meal.id !== mealId;
+      return String(meal.id) !== mealId;
     });
+    store.defaultMealsSeeded = true;
+    if (typeof window.studioMarkMealRemoved === "function") {
+      window.studioMarkMealRemoved(store, mealId);
+    }
     saveMacroStore(store);
     renderLibrary();
     if (window.studioUndo) {
@@ -342,6 +356,9 @@
         onUndo: function () {
           var s = loadMacroStore();
           s.meals.push(removedMeal);
+          if (typeof window.studioUnmarkMealRemoved === "function") {
+            window.studioUnmarkMealRemoved(s, mealId);
+          }
           saveMacroStore(s);
           renderLibrary();
         },

@@ -47,6 +47,7 @@
     return {
       meals: [],
       defaultMealsSeeded: false,
+      removedMealIds: [],
       logs: {},
       goalsCurrent: cloneGoals(DEFAULT_GOALS),
       dayGoals: {},
@@ -57,6 +58,7 @@
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       var store = emptyStore();
+      var needsPersist = false;
       if (raw) {
         var data = JSON.parse(raw);
         store = {
@@ -67,15 +69,21 @@
             typeof data.defaultMealsSeeded === "boolean"
               ? data.defaultMealsSeeded
               : true,
+          removedMealIds: Array.isArray(data.removedMealIds)
+            ? data.removedMealIds.map(String)
+            : [],
           logs: data.logs && typeof data.logs === "object" ? data.logs : {},
           goalsCurrent: normalizeGoals(data.goalsCurrent || DEFAULT_GOALS),
           dayGoals:
             data.dayGoals && typeof data.dayGoals === "object" ? data.dayGoals : {},
         };
+        if (typeof data.defaultMealsSeeded !== "boolean") needsPersist = true;
+        if (!Array.isArray(data.removedMealIds)) needsPersist = true;
       }
       if (typeof window.studioEnsureDefaultMeals === "function") {
-        if (window.studioEnsureDefaultMeals(store)) saveStore(store);
+        if (window.studioEnsureDefaultMeals(store)) needsPersist = true;
       }
+      if (needsPersist) saveStore(store);
       return store;
     } catch (err) {
       console.warn("Could not read macro store", err);
@@ -707,31 +715,32 @@
 
   document.body.addEventListener("click", function (event) {
     var entryBtn = event.target.closest("[data-remove-entry]");
-    if (entryBtn) {
-      var entryId = entryBtn.getAttribute("data-remove-entry");
-      var store = loadStore();
-      var date = selectedDateISO();
-      var removed = null;
-      dayEntries(store, date).forEach(function (entry) {
-        if (entry.id === entryId) removed = entry;
-      });
-      if (!removed) return;
-      store.logs[date] = dayEntries(store, date).filter(function (entry) {
-        return entry.id !== entryId;
-      });
-      saveStore(store);
-      refresh();
-      window.studioUndo.offer({
-        message: "Meal log removed",
-        onUndo: function () {
-          var s = loadStore();
-          if (!s.logs[date]) s.logs[date] = [];
-          s.logs[date].push(removed);
-          saveStore(s);
-          refresh();
-        },
-      });
-    }
+    if (!entryBtn) return;
+    event.preventDefault();
+    var entryId = String(entryBtn.getAttribute("data-remove-entry") || "");
+    if (!entryId) return;
+    var store = loadStore();
+    var date = selectedDateISO();
+    var removed = null;
+    dayEntries(store, date).forEach(function (entry) {
+      if (String(entry.id) === entryId) removed = entry;
+    });
+    if (!removed) return;
+    store.logs[date] = dayEntries(store, date).filter(function (entry) {
+      return String(entry.id) !== entryId;
+    });
+    saveStore(store);
+    refresh();
+    window.studioUndo.offer({
+      message: "Meal log removed",
+      onUndo: function () {
+        var s = loadStore();
+        if (!s.logs[date]) s.logs[date] = [];
+        s.logs[date].push(removed);
+        saveStore(s);
+        refresh();
+      },
+    });
   });
   }
 

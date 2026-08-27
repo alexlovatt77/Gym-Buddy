@@ -38,15 +38,27 @@ window.STUDIO_DEFAULT_MEALS = [
   },
 ];
 
+/**
+ * Seed built-in meals only once. Never recreate a meal the user removed.
+ */
 window.studioEnsureDefaultMeals = function (store) {
   if (!store || !Array.isArray(store.meals)) return false;
+
+  var removed = {};
+  (Array.isArray(store.removedMealIds) ? store.removedMealIds : []).forEach(function (id) {
+    removed[String(id)] = true;
+  });
+
   if (store.defaultMealsSeeded) return false;
+
   var byId = {};
   store.meals.forEach(function (meal) {
-    if (meal && meal.id) byId[meal.id] = true;
+    if (meal && meal.id != null) byId[String(meal.id)] = true;
   });
+
   (window.STUDIO_DEFAULT_MEALS || []).forEach(function (meal) {
-    if (byId[meal.id]) return;
+    var id = String(meal.id);
+    if (removed[id] || byId[id]) return;
     store.meals.push({
       id: meal.id,
       category: meal.category,
@@ -57,6 +69,24 @@ window.studioEnsureDefaultMeals = function (store) {
       carbs: meal.carbs,
     });
   });
+
   store.defaultMealsSeeded = true;
+  if (!Array.isArray(store.removedMealIds)) store.removedMealIds = [];
   return true;
+};
+
+window.studioMarkMealRemoved = function (store, mealId) {
+  if (!store) return;
+  if (!Array.isArray(store.removedMealIds)) store.removedMealIds = [];
+  var id = String(mealId);
+  if (store.removedMealIds.indexOf(id) < 0) store.removedMealIds.push(id);
+  store.defaultMealsSeeded = true;
+};
+
+window.studioUnmarkMealRemoved = function (store, mealId) {
+  if (!store || !Array.isArray(store.removedMealIds)) return;
+  var id = String(mealId);
+  store.removedMealIds = store.removedMealIds.filter(function (item) {
+    return String(item) !== id;
+  });
 };
