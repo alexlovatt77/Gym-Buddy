@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Macros — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=9" />
+    <link rel="stylesheet" href="css/styles.css?v=12" />
   </head>
   <body>
     <div class="app">
@@ -18,14 +18,7 @@
       <main class="page">
         <p class="page__kicker">Nutrition</p>
         <h1 class="page__title">Macros</h1>
-
-        <section class="section" aria-labelledby="day-heading">
-          <h2 class="section__title" id="day-heading">Day</h2>
-          <div class="stat-row">
-            <span class="stat-row__label">Day</span>
-            <span class="stat-row__value" id="current-day-label">—</span>
-          </div>
-        </section>
+        <p class="section__note" id="current-day-label">—</p>
 
         <section class="section" aria-labelledby="today">
           <h2 class="section__title" id="today">Totals</h2>
@@ -53,7 +46,7 @@
             </div>
           </div>
           <div class="stat-row">
-            <span class="stat-row__label">Carbohydrate</span>
+            <span class="stat-row__label">Carbs</span>
             <span class="stat-row__value" id="total-carbs">—</span>
             <div class="progress" style="grid-column: 1 / -1" aria-hidden="true">
               <div class="progress__bar" id="bar-carbs" style="--pct: 0%"></div>
@@ -114,7 +107,7 @@
         <section class="section" aria-labelledby="history-heading">
           <h2 class="section__title" id="history-heading">History</h2>
           <div class="btn-row">
-            <button class="btn" type="button" id="open-history">History</button>
+            <button class="btn" type="button" id="open-history">View history</button>
           </div>
         </section>
       </main>
@@ -168,7 +161,7 @@
               <span class="stat-row__value" id="history-day-fat">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-row__label">Carbohydrate</span>
+              <span class="stat-row__label">Carbs</span>
               <span class="stat-row__value" id="history-day-carbs">—</span>
             </div>
             <h4 class="section__title" style="margin-top: 1.5rem">Meals</h4>
@@ -202,10 +195,10 @@
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
-    <script src="js/app-data.js?v=2"></script>
+    <script src="js/app-data.js?v=3"></script>
     <script src="js/nav.js"></script>
-    <script src="js/undo.js"></script>
+    <script src="js/undo.js?v=2"></script>
     <script src="js/meals-defaults.js?v=3"></script>
-    <script src="js/macro.js?v=3"></script>
+    <script src="js/macro.js?v=4"></script>
   </body>
 </html>

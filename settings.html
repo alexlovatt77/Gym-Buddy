@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Settings — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=9" />
+    <link rel="stylesheet" href="css/styles.css?v=12" />
   </head>
   <body>
     <div class="app">
@@ -16,7 +16,6 @@
       </header>
 
       <main class="page">
-        <p class="page__kicker">Settings</p>
         <div class="setup-head">
           <h1 class="page__title">Settings</h1>
           <div class="setup-tabs" role="group" aria-label="Settings sections">
@@ -146,7 +145,7 @@
               </thead>
               <tbody id="meal-library">
                 <tr class="is-placeholder">
-                  <td colspan="7">No meals saved yet</td>
+                  <td colspan="7">No meals yet</td>
                 </tr>
               </tbody>
             </table>
@@ -201,7 +200,7 @@
                   <option value="system">Match system</option>
                 </select>
               </div>
-              <p class="section__note" id="theme-note">Light is the default. Fallout activates the full Pip-Boy terminal experience.</p>
+              <p class="section__note" id="theme-note">Choose light, dark, system, or Fallout.</p>
             </form>
           </section>
         </div>
@@ -209,7 +208,7 @@
         <section class="section" aria-labelledby="data-heading">
           <h2 class="section__title" id="data-heading">Data</h2>
           <p class="section__note">
-            Export downloads a backup file you can save in Files (or Downloads). Use Restore to load it later.
+            Export a backup file to Downloads (or Files). Restore loads it back onto this device.
           </p>
           <div class="btn-row">
             <button class="btn" type="button" id="export-backup">Export backup</button>
@@ -221,8 +220,8 @@
               hidden
             />
           </div>
-          <p class="field-error" id="backup-msg" hidden></p>
-          <div class="btn-row" style="margin-top: var(--space-4)">
+          <p class="field-status" id="backup-msg" hidden></p>
+          <div class="btn-row btn-row--spaced">
             <button class="btn btn--ghost" type="button" id="clear-all-data">Clear all data</button>
           </div>
         </section>
@@ -238,12 +237,12 @@
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
-    <script src="js/app-data.js?v=2"></script>
+    <script src="js/app-data.js?v=3"></script>
     <script src="js/nav.js"></script>
-    <script src="js/undo.js"></script>
+    <script src="js/undo.js?v=2"></script>
     <script src="js/meals-defaults.js?v=3"></script>
     <script src="js/exercise-library.js?v=4"></script>
     <script src="js/targets.js"></script>
-    <script src="js/settings.js?v=4"></script>
+    <script src="js/settings.js?v=2"></script>
   </body>
 </html>

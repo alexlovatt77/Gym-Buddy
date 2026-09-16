@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  var DURATION_MS = 5000;
+  var UNDO_MS = 5000;
+  var TOAST_MS = 2600;
   var toastEl = null;
   var labelEl = null;
   var undoBtn = null;
@@ -13,6 +14,8 @@
     toastEl = document.createElement("div");
     toastEl.className = "undo-toast";
     toastEl.hidden = true;
+    toastEl.setAttribute("role", "status");
+    toastEl.setAttribute("aria-live", "polite");
     toastEl.innerHTML =
       '<p class="undo-toast__label"></p>' +
       '<button type="button" class="undo-toast__action">Undo</button>';
@@ -34,24 +37,47 @@
       timer = null;
     }
     currentUndo = null;
-    if (toastEl) toastEl.hidden = true;
+    if (toastEl) {
+      toastEl.hidden = true;
+      toastEl.classList.remove("undo-toast--ok");
+    }
+    if (undoBtn) undoBtn.hidden = false;
+  }
+
+  function showToast(message, options) {
+    ensureToast();
+    dismiss();
+
+    var opts = options || {};
+    labelEl.textContent = message || "";
+    toastEl.classList.toggle("undo-toast--ok", !!opts.ok);
+    if (undoBtn) undoBtn.hidden = !opts.onUndo;
+    toastEl.hidden = false;
+
+    if (typeof opts.onUndo === "function") {
+      currentUndo = { onUndo: opts.onUndo };
+    }
+
+    timer = setTimeout(function () {
+      dismiss();
+    }, opts.duration || (opts.onUndo ? UNDO_MS : TOAST_MS));
   }
 
   window.studioUndo = {
     offer: function (options) {
-      ensureToast();
-      dismiss();
-
       var opts = options || {};
       if (typeof opts.onUndo !== "function") return;
+      showToast(opts.message || "Removed", {
+        onUndo: opts.onUndo,
+        duration: UNDO_MS,
+      });
+    },
+  };
 
-      currentUndo = { onUndo: opts.onUndo };
-      labelEl.textContent = opts.message || "Removed";
-      toastEl.hidden = false;
-
-      timer = setTimeout(function () {
-        dismiss();
-      }, DURATION_MS);
+  window.studioToast = {
+    show: function (message, durationMs) {
+      if (!message) return;
+      showToast(message, { ok: true, duration: durationMs || TOAST_MS });
     },
   };
 })();

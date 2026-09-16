@@ -214,7 +214,7 @@
 
     if (!meals.length) {
       tbody.innerHTML =
-        '<tr class="is-placeholder"><td colspan="7">No meals saved yet</td></tr>';
+        '<tr class="is-placeholder"><td colspan="7">No meals yet</td></tr>';
       return;
     }
 
@@ -257,6 +257,20 @@
     showSetupTab(tabIndex + 1);
   });
 
+  function setStatus(el, message, kind) {
+    if (!el) return;
+    el.classList.remove("is-error", "is-success", "field-error", "section__note");
+    el.classList.add("field-status");
+    if (kind === "error") el.classList.add("is-error");
+    if (kind === "success") el.classList.add("is-success");
+    el.textContent = message || "";
+    el.hidden = !message;
+  }
+
+  function toast(message) {
+    if (window.studioToast) window.studioToast.show(message);
+  }
+
   document.getElementById("targets-form").addEventListener("submit", function (event) {
     event.preventDefault();
     var next = {};
@@ -265,17 +279,15 @@
     });
     targetsApi.saveCurrent(next);
     var note = document.getElementById("targets-saved");
-    note.hidden = false;
-    note.textContent = "Targets saved.";
-    note.style.color = "var(--ok)";
+    if (note) note.hidden = true;
+    toast("Targets saved");
   });
 
   var mealError = document.getElementById("meal-error");
 
   document.getElementById("meal-form").addEventListener("submit", function (event) {
     event.preventDefault();
-    mealError.hidden = true;
-    mealError.style.color = "";
+    setStatus(mealError, "");
 
     var category = document.getElementById("meal-category").value;
     var name = document.getElementById("meal-name").value.trim();
@@ -285,13 +297,11 @@
     var carbs = Number(document.getElementById("meal-carbs").value);
 
     if (!CATEGORY_LABEL[category]) {
-      mealError.textContent = "Choose a category.";
-      mealError.hidden = false;
+      setStatus(mealError, "Choose a category.", "error");
       return;
     }
     if (!name) {
-      mealError.textContent = "Enter a meal name.";
-      mealError.hidden = false;
+      setStatus(mealError, "Enter a meal name.", "error");
       return;
     }
     if (
@@ -304,8 +314,7 @@
       !isFinite(carbs) ||
       carbs < 0
     ) {
-      mealError.textContent = "Enter valid non-negative numbers for calories and macros.";
-      mealError.hidden = false;
+      setStatus(mealError, "Enter calories and macros as 0 or higher.", "error");
       return;
     }
 
@@ -323,10 +332,8 @@
 
     document.getElementById("meal-form").reset();
     document.getElementById("meal-category").value = category;
-    mealError.hidden = false;
-    mealError.textContent = "Meal saved.";
-    mealError.style.color = "var(--ok)";
     renderLibrary();
+    toast("Meal saved");
   });
 
   document.body.addEventListener("click", function (event) {
@@ -377,8 +384,7 @@
   document.getElementById("goals-form").addEventListener("submit", function (event) {
     event.preventDefault();
     var errorEl = document.getElementById("goals-error");
-    errorEl.hidden = true;
-    errorEl.style.color = "";
+    setStatus(errorEl, "");
 
     var next = normalizeGoals({
       calories: Number(document.getElementById("goal-calories").value),
@@ -397,8 +403,7 @@
       !isFinite(next.carbs) ||
       next.carbs < 0
     ) {
-      errorEl.textContent = "Enter valid non-negative goals.";
-      errorEl.hidden = false;
+      setStatus(errorEl, "Enter goals as 0 or higher.", "error");
       return;
     }
 
@@ -407,9 +412,7 @@
     store.goalsCurrent = next;
     saveMacroStore(store);
     fillGoalsForm();
-    errorEl.hidden = false;
-    errorEl.textContent = "Goals saved. They apply from tomorrow.";
-    errorEl.style.color = "var(--ok)";
+    toast("Goals saved — they apply from tomorrow");
   });
 
   showSetupTab(0);
@@ -423,20 +426,19 @@
   function updateThemeNote(mode) {
     if (!themeNote) return;
     if (mode === "fallout") {
-      themeNote.textContent = "Fallout mode active — Pip-Boy terminal online.";
+      themeNote.textContent = "Fallout mode active — Pip-Boy terminal look.";
     } else if (mode === "dark") {
       themeNote.textContent = "Dark mode active.";
     } else if (mode === "system") {
-      themeNote.textContent = "Match system follows your phone’s light/dark setting.";
+      themeNote.textContent = "Follows your device light or dark setting.";
     } else {
-      themeNote.textContent = "Light is the default. Fallout activates the full Pip-Boy terminal experience.";
+      themeNote.textContent = "Choose light, dark, system, or Fallout.";
     }
   }
 
   function applyThemeFromSelect() {
     if (!themeSelect || !window.studioTheme) return;
     var mode = window.studioTheme.setMode(themeSelect.value);
-    // Keep the select in sync with what actually applied.
     themeSelect.value = mode;
     updateThemeNote(mode);
   }
@@ -448,27 +450,23 @@
     themeSelect.addEventListener("input", applyThemeFromSelect);
   }
 
+  var backupMsg = document.getElementById("backup-msg");
+
+  if (/[\?&]restored=1(?:&|$)/.test(location.search)) {
+    toast("Backup restored");
+    history.replaceState({}, "", location.pathname.split("/").pop() || "settings.html");
+  }
+
   document.getElementById("export-backup").addEventListener("click", function () {
-    var msg = document.getElementById("backup-msg");
     try {
       if (typeof window.studioDownloadBackup !== "function") {
         throw new Error("Backup is not available.");
       }
       window.studioDownloadBackup();
-      if (msg) {
-        msg.hidden = false;
-        msg.classList.remove("field-error");
-        msg.classList.add("section__note");
-        msg.textContent =
-          "Backup downloaded. On iPhone, check Files → Downloads (or where Safari asked you to save).";
-      }
+      setStatus(backupMsg, "");
+      toast("Backup downloaded");
     } catch (err) {
-      if (msg) {
-        msg.hidden = false;
-        msg.classList.add("field-error");
-        msg.classList.remove("section__note");
-        msg.textContent = err.message || "Could not export backup.";
-      }
+      setStatus(backupMsg, err.message || "Could not export backup.", "error");
     }
   });
 
@@ -481,12 +479,11 @@
     });
 
     restoreFile.addEventListener("change", function () {
-      var msg = document.getElementById("backup-msg");
       var file = restoreFile.files && restoreFile.files[0];
       if (!file) return;
       if (
         !confirm(
-          "Restore this backup? It will replace workouts, macros, weight, water, maxes, and settings currently on this device."
+          "Restore this backup? It will replace workouts, macros, weight, water, maxes, and settings on this device."
         )
       ) {
         restoreFile.value = "";
@@ -498,29 +495,13 @@
         try {
           var backup = JSON.parse(String(reader.result || ""));
           window.studioImportBackup(backup);
-          if (msg) {
-            msg.hidden = false;
-            msg.classList.remove("field-error");
-            msg.classList.add("section__note");
-            msg.textContent = "Backup restored.";
-          }
-          location.reload();
+          location.replace("settings.html?restored=1");
         } catch (err) {
-          if (msg) {
-            msg.hidden = false;
-            msg.classList.add("field-error");
-            msg.classList.remove("section__note");
-            msg.textContent = err.message || "Could not restore that file.";
-          }
+          setStatus(backupMsg, err.message || "Could not restore that file.", "error");
         }
       };
       reader.onerror = function () {
-        if (msg) {
-          msg.hidden = false;
-          msg.classList.add("field-error");
-          msg.classList.remove("section__note");
-          msg.textContent = "Could not read that file.";
-        }
+        setStatus(backupMsg, "Could not read that file.", "error");
       };
       reader.readAsText(file);
     });
@@ -529,9 +510,12 @@
   document.getElementById("clear-all-data").addEventListener("click", function () {
     if (
       !confirm(
-        "Clear all saved workouts, maxes, cardio, macros, weight, water, and settings? This cannot be undone."
+        "Clear all Gym Buddy data on this device?\n\nThis permanently deletes workouts, maxes, macros, weight, water, and settings."
       )
     ) {
+      return;
+    }
+    if (!confirm("This cannot be undone. Clear everything?")) {
       return;
     }
     if (typeof window.studioClearAllData === "function") {

@@ -598,7 +598,7 @@
               escapeHtml(ex.id) +
               '" data-add-name="' +
               escapeHtml(ex.name) +
-              '">+ set</button>' +
+              '">Add set</button>' +
               "</div>" +
               '<button type="button" class="session-exercise__undo" data-undo="' +
               escapeHtml(ex.id) +
@@ -619,12 +619,21 @@
     }
   }
 
+  function showFinishStatus(message, kind) {
+    if (!finishMsg) return;
+    finishMsg.classList.remove("is-error", "is-success", "field-error");
+    finishMsg.classList.add("field-status");
+    if (kind === "error") finishMsg.classList.add("is-error");
+    if (kind === "success") finishMsg.classList.add("is-success");
+    finishMsg.textContent = message || "";
+    finishMsg.hidden = !message;
+    finishMsg.style.color = "";
+  }
+
   function openSheet(preferredExerciseName) {
     if (!hasTodayUI) return;
     if (dayHasFinishedWorkout(loadStore(), activeDay)) {
-      finishMsg.textContent = "You already finished today’s workout. Remove it to log a new one.";
-      finishMsg.hidden = false;
-      finishMsg.style.color = "var(--signal)";
+      showFinishStatus("Today’s workout is finished. Remove it to log a new one.", "error");
       return;
     }
     errorEl.hidden = true;
@@ -824,6 +833,7 @@
         saveStore(store);
         closeSheet();
         renderSession();
+        if (window.studioToast) window.studioToast.show("Set added");
       });
     }
 
@@ -834,16 +844,14 @@
 
         if (!finishArmed) {
           finishArmed = true;
-          finishBtn.textContent = "Confirm finish";
+          finishBtn.textContent = "Tap again to finish";
           return;
         }
 
         syncDay();
         var store = loadStore();
         if (dayHasFinishedWorkout(store, activeDay)) {
-          finishMsg.textContent = "You already finished today’s workout.";
-          finishMsg.hidden = false;
-          finishMsg.style.color = "var(--signal)";
+          showFinishStatus("Today’s workout is already finished.", "error");
           resetFinishButton();
           return;
         }
@@ -857,9 +865,8 @@
         if (typeof window.studioSetsWeekRefresh === "function") {
           window.studioSetsWeekRefresh();
         }
-        finishMsg.textContent = "Workout saved. Week volume updated.";
-        finishMsg.hidden = false;
-        finishMsg.style.color = "var(--fjord)";
+        showFinishStatus("");
+        if (window.studioToast) window.studioToast.show("Workout saved");
       });
     }
 

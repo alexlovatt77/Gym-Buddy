@@ -177,7 +177,7 @@
     });
 
     if (!weeks.length) {
-      list.innerHTML = '<p class="session-empty">No logged weeks this month</p>';
+      list.innerHTML = '<p class="session-empty">No weeks logged yet</p>';
       return;
     }
 

@@ -2,7 +2,6 @@
   "use strict";
 
   var STORAGE_KEYS = [
-    "studio.demo.bundle",
     "studio.workout.v1",
     "studio.workout.picker.v1",
     "studio.maxes.v1",
@@ -13,6 +12,7 @@
     "studio.sets.targets.v3",
     "studio.sets.targets.v2",
     "studio.theme.v1",
+    "studio.demo.bundle",
   ];
 
   var BACKUP_KEYS = STORAGE_KEYS.filter(function (key) {
@@ -41,7 +41,7 @@
 
   window.studioImportBackup = function (backup) {
     if (!backup || typeof backup !== "object" || !backup.data || typeof backup.data !== "object") {
-      throw new Error("That file is not a Gym Buddy backup.");
+      throw new Error("This file isn’t a valid Gym Buddy backup.");
     }
     Object.keys(backup.data).forEach(function (key) {
       if (BACKUP_KEYS.indexOf(key) < 0) return;
@@ -69,16 +69,4 @@
     }, 1000);
     return backup;
   };
-
-  if (/[\?&]clear=1(?:&|$)/.test(location.search)) {
-    if (!confirm("Clear all Gym Buddy data on this device?")) {
-      var cleanAbort = location.pathname.split("/").pop() || "index.html";
-      location.replace(cleanAbort);
-      return;
-    }
-    window.studioClearAllData();
-    var clean = location.pathname.split("/").pop() || "index.html";
-    location.replace(clean);
-    return;
-  }
 })();

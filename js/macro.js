@@ -595,7 +595,7 @@
     var tbody = document.getElementById("history-day-meals");
     if (!entries.length) {
       tbody.innerHTML =
-        '<tr class="is-placeholder"><td colspan="5">No entries</td></tr>';
+        '<tr class="is-placeholder"><td colspan="5">No entries yet</td></tr>';
       return;
     }
 
@@ -704,7 +704,7 @@
       return item.id === mealId;
     });
     if (!meal) {
-      logError.textContent = "That meal is no longer in your library.";
+      logError.textContent = "That meal was removed from your library.";
       logError.hidden = false;
       populateMealDropdown();
       return;
@@ -760,7 +760,7 @@
     saveStore(store);
     refresh();
     window.studioUndo.offer({
-      message: "Meal log removed",
+      message: "Meal removed",
       onUndo: function () {
         var s = loadStore();
         if (!s.logs[date]) s.logs[date] = [];

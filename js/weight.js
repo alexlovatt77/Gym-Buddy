@@ -306,7 +306,8 @@
       isWeekly ? "Switch to daily chart" : "Switch to weekly Sunday averages"
     );
     toggle.title = isWeekly ? "Daily" : "Weekly";
-    note.textContent = isWeekly ? "Weekly" : "Daily";
+    toggle.textContent = isWeekly ? "Daily" : "Weekly";
+    note.textContent = isWeekly ? "Weekly averages" : "Daily";
   }
 
   function setDayLocked(locked, weight) {
@@ -723,6 +724,7 @@
       }
       upsertWeight(todayISO(), weight);
       refresh();
+      if (window.studioToast) window.studioToast.show("Weight saved");
     });
   }
 
@@ -752,6 +754,7 @@
         upsertWeight(editingDate, weight);
         closeEditWeight();
         refresh();
+        if (window.studioToast) window.studioToast.show("Weight updated");
       });
     }
 

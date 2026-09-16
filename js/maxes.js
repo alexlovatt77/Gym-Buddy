@@ -552,7 +552,7 @@
               escapeHtml(entry.id) +
               '" data-distance="' +
               escapeHtml(slide.distance) +
-              '">Date</button>' +
+              '">Edit date</button>' +
               '<button type="button" data-delete="' +
               escapeHtml(entry.id) +
               '" data-distance="' +
@@ -587,7 +587,7 @@
               '<td class="num"><div class="history-actions">' +
               '<button type="button" data-edit-date="' +
               escapeHtml(entry.id) +
-              '">Date</button>' +
+              '">Edit date</button>' +
               '<button type="button" data-delete="' +
               escapeHtml(entry.id) +
               '">Remove</button></div></td>' +
@@ -840,7 +840,7 @@
       }
       var seconds = readFormSeconds();
       if (seconds == null) {
-        errorEl.textContent = "Pick a time greater than 0:00.";
+        errorEl.textContent = "Enter a time greater than 0:00.";
         errorEl.hidden = false;
         return;
       }
@@ -854,6 +854,7 @@
       saveCardioStore(cardioStore);
       resetFormDefaults();
       refresh();
+      if (window.studioToast) window.studioToast.show("Best saved");
       return;
     }
 
@@ -874,7 +875,7 @@
       return;
     }
     if (!isFinite(weight) || weight < 0) {
-      errorEl.textContent = "Pick a weight.";
+      errorEl.textContent = "Choose a weight.";
       errorEl.hidden = false;
       return;
     }
@@ -891,6 +892,7 @@
     saveStore(store);
     resetFormDefaults();
     refresh();
+    if (window.studioToast) window.studioToast.show("Best saved");
   });
 
   document.getElementById("edit-date-form").addEventListener("submit", function (event) {
@@ -899,7 +901,7 @@
     if (!editingEntryId) return;
     var date = readEditDate();
     if (!date) {
-      editDateError.textContent = "Pick a valid date.";
+      editDateError.textContent = "Choose a valid date.";
       editDateError.hidden = false;
       return;
     }
@@ -918,6 +920,7 @@
       saveCardioStore(cardioStore);
       closeEditDate();
       refresh();
+      if (window.studioToast) window.studioToast.show("Date updated");
       return;
     }
 
@@ -936,6 +939,7 @@
     saveStore(store);
     closeEditDate();
     refresh();
+    if (window.studioToast) window.studioToast.show("Date updated");
   });
 
   editDateSheet.addEventListener("click", function (event) {
