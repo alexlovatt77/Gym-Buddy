@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=10" />
+    <link rel="stylesheet" href="css/styles.css?v=11" />
   </head>
   <body>
     <div class="app">
@@ -130,8 +130,14 @@
               <select id="set-category"></select>
             </div>
             <div class="field" id="library-exercise-field">
-              <label for="set-exercise">Exercise</label>
-              <select id="set-exercise" required></select>
+              <span class="field-legend" id="set-exercise-label">Exercise</span>
+              <div
+                id="set-exercise-picker"
+                class="exercise-picker"
+                role="listbox"
+                aria-labelledby="set-exercise-label"
+              ></div>
+              <input type="hidden" id="set-exercise" value="" />
             </div>
             <div class="record-form__grid">
               <div class="field">
@@ -169,7 +175,7 @@
     <script src="js/undo.js"></script>
     <script src="js/exercise-library.js?v=3"></script>
     <script src="js/meals-defaults.js?v=3"></script>
-    <script src="js/workout.js?v=5"></script>
+    <script src="js/workout.js?v=6"></script>
     <script src="js/weight.js"></script>
     <script src="js/macro.js?v=3"></script>
   </body>

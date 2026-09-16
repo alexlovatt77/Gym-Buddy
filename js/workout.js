@@ -214,6 +214,7 @@
   var sheet = document.getElementById("add-set-sheet");
   var categorySelect = document.getElementById("set-category");
   var exerciseSelect = document.getElementById("set-exercise");
+  var exercisePicker = document.getElementById("set-exercise-picker");
   var repsSelect = document.getElementById("set-reps");
   var weightSelect = document.getElementById("set-weight");
   var errorEl = document.getElementById("add-set-error");
@@ -350,40 +351,62 @@
       .join("");
   }
 
+  function setSelectedExercise(name) {
+    if (!exerciseSelect) return;
+    exerciseSelect.value = name || "";
+    if (!exercisePicker) return;
+    var buttons = exercisePicker.querySelectorAll("[data-exercise]");
+    for (var i = 0; i < buttons.length; i++) {
+      var on = buttons[i].getAttribute("data-exercise") === name;
+      buttons[i].classList.toggle("is-selected", on);
+      buttons[i].setAttribute("aria-selected", on ? "true" : "false");
+    }
+  }
+
   function populateLibraryExercises(preferredExercise) {
+    if (!exercisePicker || !exerciseSelect) return;
     var pplGroup = selectedPplGroup();
     var muscles = musclesForPplGroup(pplGroup);
-    while (exerciseSelect.firstChild) {
-      exerciseSelect.removeChild(exerciseSelect.firstChild);
+    exercisePicker.innerHTML = "";
+    exerciseSelect.value = "";
+    if (!muscles.length) {
+      exercisePicker.innerHTML = '<p class="exercise-picker__empty">No exercises for this workout type.</p>';
+      return;
     }
-    if (!muscles.length) return;
 
     var allExercises = [];
     muscles.forEach(function (muscle) {
       var exercises = exercisesForPplAndMuscle(pplGroup, muscle);
       if (!exercises.length) return;
 
-      var header = document.createElement("option");
-      header.disabled = true;
-      header.value = "";
-      header.textContent = "— " + muscle + " —";
-      exerciseSelect.appendChild(header);
+      var group = document.createElement("div");
+      group.className = "exercise-picker__group";
+
+      var header = document.createElement("div");
+      header.className = "exercise-picker__header";
+      header.textContent = muscle;
+      group.appendChild(header);
 
       exercises.forEach(function (name) {
-        var option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        exerciseSelect.appendChild(option);
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "exercise-picker__item";
+        button.setAttribute("role", "option");
+        button.setAttribute("data-exercise", name);
+        button.textContent = name;
+        group.appendChild(button);
         allExercises.push(name);
       });
+
+      exercisePicker.appendChild(group);
     });
 
     var prefs = loadPickerPrefs();
     var pick = preferredExercise || prefs.exercise;
     if (pick && allExercises.indexOf(pick) !== -1) {
-      exerciseSelect.value = pick;
+      setSelectedExercise(pick);
     } else if (allExercises.length) {
-      exerciseSelect.value = allExercises[0];
+      setSelectedExercise(allExercises[0]);
     }
   }
 
@@ -650,6 +673,14 @@
     if (categorySelect) {
       categorySelect.addEventListener("change", function () {
         populateLibraryExercises(null);
+      });
+    }
+
+    if (exercisePicker) {
+      exercisePicker.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-exercise]");
+        if (!button) return;
+        setSelectedExercise(button.getAttribute("data-exercise"));
       });
     }
 
