@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=12" />
+    <link rel="stylesheet" href="css/styles.css?v=13" />
   </head>
   <body>
     <div class="app">
@@ -144,12 +144,24 @@
                 <select id="set-reps" required></select>
               </div>
               <div class="field">
-                <label for="set-weight">Weight</label>
+                <label for="set-weight" id="set-weight-label">Weight</label>
                 <div class="record-form__weight">
                   <select id="set-weight" required></select>
-                  <span class="record-form__unit">lbs</span>
+                  <span class="record-form__unit" id="set-weight-unit">lbs</span>
                 </div>
               </div>
+            </div>
+            <div class="field" id="set-load-field">
+              <span class="field-legend" id="set-load-label">Weight means</span>
+              <div class="load-toggle" role="group" aria-labelledby="set-load-label">
+                <button type="button" class="load-toggle__btn" data-load="each" aria-pressed="false">
+                  Each
+                </button>
+                <button type="button" class="load-toggle__btn is-selected" data-load="total" aria-pressed="true">
+                  Total
+                </button>
+              </div>
+              <p class="section__note" id="set-load-note">Full bar, stack, or machine load</p>
             </div>
             <p class="field-error" id="add-set-error" hidden></p>
             <div class="btn-row">
@@ -172,9 +184,9 @@
     <script src="js/app-data.js?v=3"></script>
     <script src="js/nav.js"></script>
     <script src="js/undo.js?v=2"></script>
-    <script src="js/exercise-library.js?v=4"></script>
+    <script src="js/exercise-library.js?v=5"></script>
     <script src="js/meals-defaults.js?v=3"></script>
-    <script src="js/workout.js?v=7"></script>
+    <script src="js/workout.js?v=8"></script>
     <script src="js/weight.js?v=2"></script>
     <script src="js/macro.js?v=4"></script>
   </body>

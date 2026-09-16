@@ -960,6 +960,47 @@ a:hover {
   box-shadow: none;
 }
 
+.load-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin-bottom: var(--space-2);
+}
+
+.load-toggle__btn {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.load-toggle__btn.is-selected {
+  color: var(--fjord);
+  border-color: var(--fjord);
+  background: color-mix(in srgb, var(--fjord) 10%, transparent);
+}
+
+[data-theme="fallout"] .load-toggle__btn {
+  font-family: "Share Tech Mono", monospace;
+  border-radius: 0;
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: #061008;
+}
+
+[data-theme="fallout"] .load-toggle__btn.is-selected {
+  color: var(--signal);
+  border-color: var(--signal);
+  background: rgba(69, 255, 81, 0.12);
+}
+
 .exercise-picker {
   max-height: 14rem;
   overflow: auto;

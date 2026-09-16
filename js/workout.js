@@ -160,9 +160,58 @@
   function setSummaryLine(sets) {
     return sets
       .map(function (set) {
-        return set.reps + "×" + formatWeight(set.weight) + " lbs";
+        return set.reps + "×" + formatSetWeight(set);
       })
       .join(" · ");
+  }
+
+  function formatSetWeight(set) {
+    var weight = formatWeight(set.weight);
+    if (normalizeLoadMode(set.load) === "each") return weight + " lbs each";
+    return weight + " lbs";
+  }
+
+  function normalizeLoadMode(mode) {
+    return mode === "each" ? "each" : "total";
+  }
+
+  function defaultLoadModeForExercise(name) {
+    if (typeof window.studioLoadModeForExercise === "function") {
+      return normalizeLoadMode(window.studioLoadModeForExercise(name));
+    }
+    return "total";
+  }
+
+  function syncLoadModeUi() {
+    var isEach = selectedLoadMode === "each";
+    if (weightLabel) weightLabel.textContent = isEach ? "Weight (each)" : "Weight (total)";
+    if (weightUnit) weightUnit.textContent = isEach ? "lbs each" : "lbs";
+    if (loadNote) {
+      loadNote.textContent = isEach
+        ? "One dumbbell or one side"
+        : "Full bar, stack, or machine load";
+    }
+    if (!loadToggle) return;
+    var buttons = loadToggle.querySelectorAll("[data-load]");
+    for (var i = 0; i < buttons.length; i++) {
+      var on = buttons[i].getAttribute("data-load") === selectedLoadMode;
+      buttons[i].classList.toggle("is-selected", on);
+      buttons[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  function setLoadMode(mode, touched) {
+    selectedLoadMode = normalizeLoadMode(mode);
+    if (touched) loadModeTouched = true;
+    syncLoadModeUi();
+  }
+
+  function applyLoadModeForExercise(exerciseName, preferredMode) {
+    if (preferredMode === "each" || preferredMode === "total") {
+      setLoadMode(preferredMode, false);
+      return;
+    }
+    setLoadMode(defaultLoadModeForExercise(exerciseName), false);
   }
 
   function mergeDraftIntoDay(store, date) {
@@ -217,6 +266,10 @@
   var exercisePicker = document.getElementById("set-exercise-picker");
   var repsSelect = document.getElementById("set-reps");
   var weightSelect = document.getElementById("set-weight");
+  var weightLabel = document.getElementById("set-weight-label");
+  var weightUnit = document.getElementById("set-weight-unit");
+  var loadNote = document.getElementById("set-load-note");
+  var loadToggle = document.querySelector(".load-toggle");
   var errorEl = document.getElementById("add-set-error");
   var finishBtn = document.getElementById("finish-workout");
   var finishMsg = document.getElementById("finish-msg");
@@ -225,6 +278,8 @@
   var finishArmed = false;
   var weekDayIndex = 0;
   var weekDayCount = 0;
+  var selectedLoadMode = "total";
+  var loadModeTouched = false;
 
   if (hasTodayUI && repsSelect && weightSelect) {
     fillSelect(repsSelect, range(1, 12));
@@ -249,7 +304,14 @@
     try {
       var raw = localStorage.getItem(PICKER_PREFS_KEY);
       if (!raw) {
-        return { category: null, muscle: null, exercise: null, reps: null, weight: null };
+        return {
+          category: null,
+          muscle: null,
+          exercise: null,
+          reps: null,
+          weight: null,
+          load: null,
+        };
       }
       var data = JSON.parse(raw);
       return {
@@ -258,13 +320,21 @@
         exercise: typeof data.exercise === "string" ? data.exercise : null,
         reps: isFinite(Number(data.reps)) ? Number(data.reps) : null,
         weight: isFinite(Number(data.weight)) ? Number(data.weight) : null,
+        load: data.load === "each" || data.load === "total" ? data.load : null,
       };
     } catch (err) {
-      return { category: null, muscle: null, exercise: null, reps: null, weight: null };
+      return {
+        category: null,
+        muscle: null,
+        exercise: null,
+        reps: null,
+        weight: null,
+        load: null,
+      };
     }
   }
 
-  function savePickerPrefs(category, muscle, exercise, reps, weight) {
+  function savePickerPrefs(category, muscle, exercise, reps, weight, load) {
     if (!category || !exercise) return;
     localStorage.setItem(
       PICKER_PREFS_KEY,
@@ -274,14 +344,20 @@
         exercise: exercise,
         reps: reps,
         weight: weight,
+        load: normalizeLoadMode(load),
       })
     );
   }
 
-  function applyRepsWeightDefaults() {
+  function applyRepsWeightDefaults(exerciseName) {
     var prefs = loadPickerPrefs();
     setSelectValue(repsSelect, prefs.reps != null ? prefs.reps : 8);
     setSelectValue(weightSelect, prefs.weight != null ? prefs.weight : 135);
+    var sameExercise =
+      exerciseName &&
+      prefs.exercise &&
+      String(exerciseName).toLowerCase() === String(prefs.exercise).toLowerCase();
+    applyLoadModeForExercise(exerciseName, sameExercise ? prefs.load : null);
   }
 
   function findPplIndex(categoryName) {
@@ -361,6 +437,7 @@
       buttons[i].classList.toggle("is-selected", on);
       buttons[i].setAttribute("aria-selected", on ? "true" : "false");
     }
+    if (!loadModeTouched) applyLoadModeForExercise(name, null);
   }
 
   function populateLibraryExercises(preferredExercise) {
@@ -637,8 +714,9 @@
       return;
     }
     errorEl.hidden = true;
+    loadModeTouched = false;
     applyLibraryDefaults(preferredExerciseName || null);
-    applyRepsWeightDefaults();
+    applyRepsWeightDefaults(exerciseSelect ? exerciseSelect.value : preferredExerciseName);
     sheet.hidden = false;
     document.body.style.overflow = "hidden";
   }
@@ -681,6 +759,7 @@
 
     if (categorySelect) {
       categorySelect.addEventListener("change", function () {
+        loadModeTouched = false;
         populateLibraryExercises(null);
       });
     }
@@ -689,7 +768,16 @@
       exercisePicker.addEventListener("click", function (event) {
         var button = event.target.closest("[data-exercise]");
         if (!button) return;
+        loadModeTouched = false;
         setSelectedExercise(button.getAttribute("data-exercise"));
+      });
+    }
+
+    if (loadToggle) {
+      loadToggle.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-load]");
+        if (!button) return;
+        setLoadMode(button.getAttribute("data-load"), true);
       });
     }
 
@@ -820,6 +908,7 @@
           id: uid("set"),
           reps: reps,
           weight: weight,
+          load: selectedLoadMode,
           at: Date.now(),
         });
         var group = LIBRARY[Number(categorySelect.value)];
@@ -828,7 +917,8 @@
           primaryMuscleForExercise(name),
           name,
           reps,
-          weight
+          weight,
+          selectedLoadMode
         );
         saveStore(store);
         closeSheet();

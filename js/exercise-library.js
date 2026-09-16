@@ -239,3 +239,27 @@ window.studioSetCredits = function (exerciseName) {
 
   return credits;
 };
+
+/**
+ * How weight is logged for an exercise.
+ * "each" = one dumbbell / one side. "total" = full bar, stack, or machine.
+ */
+window.studioLoadModeForExercise = function (exerciseName) {
+  var name = String(exerciseName || "").toLowerCase();
+  if (!name) return "total";
+
+  if (
+    name.indexOf("dumbbell") !== -1 ||
+    name.indexOf("single-arm") !== -1 ||
+    name === "lateral raises" ||
+    name === "front raises" ||
+    name === "bulgarian split squat" ||
+    name === "elevated lunges" ||
+    name === "seated decline curls"
+  ) {
+    return "each";
+  }
+
+  return "total";
+};
+
