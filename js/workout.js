@@ -184,7 +184,7 @@
 
   function syncLoadModeUi() {
     var isEach = selectedLoadMode === "each";
-    if (weightLabel) weightLabel.textContent = isEach ? "Weight (each)" : "Weight (total)";
+    if (weightLabel) weightLabel.textContent = isEach ? "Weight · each" : "Weight · total";
     if (weightUnit) weightUnit.textContent = isEach ? "lbs each" : "lbs";
     if (loadNote) {
       loadNote.textContent = isEach
@@ -262,6 +262,7 @@
 
   var sheet = document.getElementById("add-set-sheet");
   var categorySelect = document.getElementById("set-category");
+  var categoryToggle = document.getElementById("set-category-toggle");
   var exerciseSelect = document.getElementById("set-exercise");
   var exercisePicker = document.getElementById("set-exercise-picker");
   var repsSelect = document.getElementById("set-reps");
@@ -417,14 +418,49 @@
   }
 
   function initCategories() {
-    categorySelect.innerHTML = LIBRARY.filter(function (group) {
+    if (!categorySelect) return;
+    var options = LIBRARY.filter(function (group) {
       return group.exercises && group.exercises.length;
-    })
+    });
+    categorySelect.innerHTML = options
       .map(function (group) {
         var index = LIBRARY.indexOf(group);
         return '<option value="' + index + '">' + escapeHtml(group.category) + "</option>";
       })
       .join("");
+
+    if (!categoryToggle) return;
+    categoryToggle.innerHTML = options
+      .map(function (group) {
+        var index = LIBRARY.indexOf(group);
+        return (
+          '<button type="button" class="ppl-toggle__btn" data-ppl-index="' +
+          index +
+          '">' +
+          escapeHtml(group.category) +
+          "</button>"
+        );
+      })
+      .join("");
+    syncPplToggle();
+  }
+
+  function syncPplToggle() {
+    if (!categoryToggle || !categorySelect) return;
+    var buttons = categoryToggle.querySelectorAll("[data-ppl-index]");
+    for (var i = 0; i < buttons.length; i++) {
+      var on = buttons[i].getAttribute("data-ppl-index") === String(categorySelect.value);
+      buttons[i].classList.toggle("is-selected", on);
+      buttons[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  function setPplIndex(index) {
+    if (!categorySelect) return;
+    categorySelect.value = String(index);
+    syncPplToggle();
+    loadModeTouched = false;
+    populateLibraryExercises(null);
   }
 
   function setSelectedExercise(name) {
@@ -501,6 +537,7 @@
       });
     }
     categorySelect.value = String(Math.max(0, idx));
+    syncPplToggle();
     populateLibraryExercises(exerciseName);
   }
 
@@ -757,8 +794,17 @@
       });
     }
 
+    if (categoryToggle) {
+      categoryToggle.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-ppl-index]");
+        if (!button) return;
+        setPplIndex(button.getAttribute("data-ppl-index"));
+      });
+    }
+
     if (categorySelect) {
       categorySelect.addEventListener("change", function () {
+        syncPplToggle();
         loadModeTouched = false;
         populateLibraryExercises(null);
       });
