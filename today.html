@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=14" />
+    <link rel="stylesheet" href="css/styles.css?v=15" />
   </head>
   <body>
     <div class="app">
@@ -123,54 +123,59 @@
             </button>
           </div>
 
-          <form class="record-form" id="add-set-form">
-            <div class="field" id="library-category-field">
-              <label for="set-category">Push / Pull / Legs</label>
-              <select id="set-category"></select>
-            </div>
-            <div class="field" id="library-exercise-field">
-              <span class="field-legend" id="set-exercise-label">Exercise</span>
-              <div
-                id="set-exercise-picker"
-                class="exercise-picker"
-                role="listbox"
-                aria-labelledby="set-exercise-label"
-              ></div>
-              <input type="hidden" id="set-exercise" value="" />
-            </div>
-            <div class="field" id="set-load-field">
-              <span class="field-legend" id="set-load-label">Weight type</span>
-              <div class="load-toggle" role="group" aria-labelledby="set-load-label">
-                <button type="button" class="load-toggle__btn" data-load="each" aria-pressed="false">
-                  Per side
-                </button>
-                <button
-                  type="button"
-                  class="load-toggle__btn is-selected"
-                  data-load="total"
-                  aria-pressed="true"
-                >
-                  Total load
-                </button>
+          <form class="record-form add-set-form" id="add-set-form">
+            <div class="add-set-form__body">
+              <div class="field" id="library-category-field">
+                <label for="set-category">Push / Pull / Legs</label>
+                <select id="set-category"></select>
               </div>
-              <p class="section__note" id="set-load-note">Full bar, stack, or machine load</p>
-            </div>
-            <div class="record-form__grid">
-              <div class="field">
-                <label for="set-reps">Reps</label>
-                <select id="set-reps" required></select>
+              <div class="field" id="library-exercise-field">
+                <span class="field-legend" id="set-exercise-label">Exercise</span>
+                <div
+                  id="set-exercise-picker"
+                  class="exercise-picker"
+                  role="listbox"
+                  aria-labelledby="set-exercise-label"
+                ></div>
+                <input type="hidden" id="set-exercise" value="" />
               </div>
-              <div class="field">
-                <label for="set-weight" id="set-weight-label">Weight</label>
-                <div class="record-form__weight">
-                  <select id="set-weight" required></select>
-                  <span class="record-form__unit" id="set-weight-unit">lbs</span>
+            </div>
+
+            <div class="add-set-form__footer">
+              <div class="field" id="set-load-field">
+                <span class="field-legend" id="set-load-label">Weight type</span>
+                <div class="load-toggle" role="group" aria-labelledby="set-load-label">
+                  <button type="button" class="load-toggle__btn" data-load="each" aria-pressed="false">
+                    Per side
+                  </button>
+                  <button
+                    type="button"
+                    class="load-toggle__btn is-selected"
+                    data-load="total"
+                    aria-pressed="true"
+                  >
+                    Total load
+                  </button>
+                </div>
+                <p class="section__note" id="set-load-note">Full bar, stack, or machine load</p>
+              </div>
+              <div class="record-form__grid">
+                <div class="field">
+                  <label for="set-reps">Reps</label>
+                  <select id="set-reps" required></select>
+                </div>
+                <div class="field">
+                  <label for="set-weight" id="set-weight-label">Weight</label>
+                  <div class="record-form__weight">
+                    <select id="set-weight" required></select>
+                    <span class="record-form__unit" id="set-weight-unit">lbs</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <p class="field-error" id="add-set-error" hidden></p>
-            <div class="btn-row">
-              <button class="btn" type="submit">Save set</button>
+              <p class="field-error" id="add-set-error" hidden></p>
+              <div class="btn-row">
+                <button class="btn" type="submit">Save set</button>
+              </div>
             </div>
           </form>
         </div>
@@ -191,7 +196,7 @@
     <script src="js/undo.js?v=2"></script>
     <script src="js/exercise-library.js?v=5"></script>
     <script src="js/meals-defaults.js?v=3"></script>
-    <script src="js/workout.js?v=9"></script>
+    <script src="js/workout.js?v=10"></script>
     <script src="js/weight.js?v=2"></script>
     <script src="js/macro.js?v=4"></script>
   </body>

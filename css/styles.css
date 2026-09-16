@@ -1002,12 +1002,11 @@ a:hover {
 }
 
 .exercise-picker {
-  max-height: 9.5rem;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--paper);
-  -webkit-overflow-scrolling: touch;
 }
 
 .exercise-picker__empty {
@@ -2092,11 +2091,63 @@ a:hover {
   flex-direction: column;
   padding: var(--space-5);
   padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
-  overflow: auto;
+  overflow: hidden;
   background: var(--paper-raised);
   border-top: 1px solid var(--line);
   border-radius: 8px 8px 0 0;
   animation: sheet-up 280ms ease-out;
+}
+
+.sheet__panel > .record-form,
+.sheet__panel > .add-set-form {
+  flex: 1;
+  min-height: 0;
+}
+
+.add-set-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.add-set-form__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--space-3);
+}
+
+.add-set-form__body .field:last-child {
+  margin-bottom: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: none;
+}
+
+.add-set-form__footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  background: var(--paper-raised);
+}
+
+.add-set-form__footer .field {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.add-set-form__footer .record-form__grid .field {
+  margin-bottom: var(--space-3);
+}
+
+.add-set-form__footer .section__note {
+  margin-bottom: 0;
+}
+
+.add-set-form__footer .btn-row {
+  margin-top: var(--space-2);
+  margin-bottom: 0;
 }
 
 @keyframes sheet-up {
