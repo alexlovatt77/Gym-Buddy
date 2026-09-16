@@ -969,14 +969,14 @@ a:hover {
 
 .load-toggle__btn {
   margin: 0;
-  padding: 0.55rem 0.75rem;
+  padding: 0.7rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: var(--ink-soft);
-  background: transparent;
-  border: 1px solid var(--line);
+  background: var(--paper-raised);
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -1002,7 +1002,7 @@ a:hover {
 }
 
 .exercise-picker {
-  max-height: 14rem;
+  max-height: 9.5rem;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 6px;
