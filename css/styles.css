@@ -960,6 +960,15 @@ a:hover {
   box-shadow: none;
 }
 
+.record-form select option:disabled {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .record-form__weight {
   display: flex;
   align-items: baseline;

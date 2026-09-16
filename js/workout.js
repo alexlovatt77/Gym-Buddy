@@ -353,30 +353,30 @@
   function populateLibraryExercises(preferredExercise) {
     var pplGroup = selectedPplGroup();
     var muscles = musclesForPplGroup(pplGroup);
-    if (!muscles.length) {
-      exerciseSelect.innerHTML = "";
-      return;
+    while (exerciseSelect.firstChild) {
+      exerciseSelect.removeChild(exerciseSelect.firstChild);
     }
+    if (!muscles.length) return;
 
     var allExercises = [];
-    exerciseSelect.innerHTML = muscles
-      .map(function (muscle) {
-        var exercises = exercisesForPplAndMuscle(pplGroup, muscle);
-        if (!exercises.length) return "";
-        allExercises = allExercises.concat(exercises);
-        return (
-          '<optgroup label="' +
-          escapeHtml(muscle) +
-          '">' +
-          exercises
-            .map(function (name) {
-              return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + "</option>";
-            })
-            .join("") +
-          "</optgroup>"
-        );
-      })
-      .join("");
+    muscles.forEach(function (muscle) {
+      var exercises = exercisesForPplAndMuscle(pplGroup, muscle);
+      if (!exercises.length) return;
+
+      var header = document.createElement("option");
+      header.disabled = true;
+      header.value = "";
+      header.textContent = "— " + muscle + " —";
+      exerciseSelect.appendChild(header);
+
+      exercises.forEach(function (name) {
+        var option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        exerciseSelect.appendChild(option);
+        allExercises.push(name);
+      });
+    });
 
     var prefs = loadPickerPrefs();
     var pick = preferredExercise || prefs.exercise;
