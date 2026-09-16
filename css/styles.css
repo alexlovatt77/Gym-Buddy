@@ -960,6 +960,90 @@ a:hover {
   box-shadow: none;
 }
 
+.exercise-picker {
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  -webkit-overflow-scrolling: touch;
+}
+
+.exercise-picker__empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.exercise-picker__group + .exercise-picker__group {
+  border-top: 1px solid var(--line);
+}
+
+.exercise-picker__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.45rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--line);
+}
+
+.exercise-picker__item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.exercise-picker__group .exercise-picker__item:last-child {
+  border-bottom: none;
+}
+
+.exercise-picker__item.is-selected {
+  color: var(--fjord);
+  background: color-mix(in srgb, var(--fjord) 10%, transparent);
+}
+
+[data-theme="fallout"] .exercise-picker {
+  background: #061008;
+  border-color: var(--line-strong);
+  box-shadow: inset 0 0 10px rgba(58, 255, 71, 0.08);
+}
+
+[data-theme="fallout"] .exercise-picker__header {
+  color: var(--signal);
+  background: #041006;
+  border-bottom-color: var(--line-strong);
+  font-family: "Share Tech Mono", monospace;
+}
+
+[data-theme="fallout"] .exercise-picker__item {
+  font-family: "Share Tech Mono", monospace;
+  border-bottom-color: var(--line);
+}
+
+[data-theme="fallout"] .exercise-picker__item.is-selected {
+  color: var(--signal);
+  background: rgba(69, 255, 81, 0.12);
+}
+
 .record-form select option:disabled {
   font-family: var(--font-body);
   font-size: 0.72rem;
