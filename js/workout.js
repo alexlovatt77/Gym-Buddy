@@ -205,6 +205,7 @@
   }
 
   var LIBRARY = window.STUDIO_PPL_LIBRARY || [];
+  var MUSCLE_LIBRARY = window.STUDIO_EXERCISE_LIBRARY || [];
   var listEl = document.getElementById("session-list");
   var weekWorkoutsEl = document.getElementById("week-workouts");
   var hasTodayUI = !!(listEl && document.getElementById("finish-workout"));
@@ -212,6 +213,7 @@
 
   var sheet = document.getElementById("add-set-sheet");
   var categorySelect = document.getElementById("set-category");
+  var muscleSelect = document.getElementById("set-muscle");
   var exerciseSelect = document.getElementById("set-exercise");
   var repsSelect = document.getElementById("set-reps");
   var weightSelect = document.getElementById("set-weight");
@@ -246,25 +248,29 @@
   function loadPickerPrefs() {
     try {
       var raw = localStorage.getItem(PICKER_PREFS_KEY);
-      if (!raw) return { category: null, exercise: null, reps: null, weight: null };
+      if (!raw) {
+        return { category: null, muscle: null, exercise: null, reps: null, weight: null };
+      }
       var data = JSON.parse(raw);
       return {
         category: typeof data.category === "string" ? data.category : null,
+        muscle: typeof data.muscle === "string" ? data.muscle : null,
         exercise: typeof data.exercise === "string" ? data.exercise : null,
         reps: isFinite(Number(data.reps)) ? Number(data.reps) : null,
         weight: isFinite(Number(data.weight)) ? Number(data.weight) : null,
       };
     } catch (err) {
-      return { category: null, exercise: null, reps: null, weight: null };
+      return { category: null, muscle: null, exercise: null, reps: null, weight: null };
     }
   }
 
-  function savePickerPrefs(category, exercise, reps, weight) {
+  function savePickerPrefs(category, muscle, exercise, reps, weight) {
     if (!category || !exercise) return;
     localStorage.setItem(
       PICKER_PREFS_KEY,
       JSON.stringify({
         category: category,
+        muscle: muscle || null,
         exercise: exercise,
         reps: reps,
         weight: weight,
@@ -295,6 +301,45 @@
     return null;
   }
 
+  function primaryMuscleForExercise(name) {
+    var lower = String(name || "").toLowerCase();
+    for (var i = 0; i < MUSCLE_LIBRARY.length; i++) {
+      var group = MUSCLE_LIBRARY[i];
+      for (var j = 0; j < group.exercises.length; j++) {
+        if (group.exercises[j].toLowerCase() === lower) return group.category;
+      }
+    }
+    return null;
+  }
+
+  function selectedPplGroup() {
+    return LIBRARY[Number(categorySelect.value)] || null;
+  }
+
+  function musclesForPplGroup(pplGroup) {
+    if (!pplGroup || !pplGroup.exercises) return [];
+    var found = {};
+    pplGroup.exercises.forEach(function (exerciseName) {
+      var muscle = primaryMuscleForExercise(exerciseName);
+      if (muscle) found[muscle] = true;
+    });
+    return Object.keys(found).sort(function (a, b) {
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+  }
+
+  function exercisesForPplAndMuscle(pplGroup, muscle) {
+    if (!pplGroup || !pplGroup.exercises || !muscle) return [];
+    return pplGroup.exercises
+      .filter(function (exerciseName) {
+        return primaryMuscleForExercise(exerciseName) === muscle;
+      })
+      .slice()
+      .sort(function (a, b) {
+        return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+      });
+  }
+
   function initCategories() {
     categorySelect.innerHTML = LIBRARY.filter(function (group) {
       return group.exercises && group.exercises.length;
@@ -306,17 +351,38 @@
       .join("");
   }
 
+  function populateMuscleGroups(preferredMuscle) {
+    if (!muscleSelect) return;
+    var pplGroup = selectedPplGroup();
+    var muscles = musclesForPplGroup(pplGroup);
+    if (!muscles.length) {
+      muscleSelect.innerHTML = '<option value="">No muscle groups</option>';
+      return;
+    }
+    muscleSelect.innerHTML = muscles
+      .map(function (muscle) {
+        return '<option value="' + escapeHtml(muscle) + '">' + escapeHtml(muscle) + "</option>";
+      })
+      .join("");
+
+    var prefs = loadPickerPrefs();
+    var pick = preferredMuscle || prefs.muscle;
+    if (pick && muscles.indexOf(pick) !== -1) {
+      muscleSelect.value = pick;
+    } else {
+      muscleSelect.value = muscles[0];
+    }
+  }
+
   function populateLibraryExercises(preferredExercise) {
-    var group = LIBRARY[Number(categorySelect.value)];
-    if (!group || !group.exercises.length) {
+    var pplGroup = selectedPplGroup();
+    var muscle = muscleSelect ? muscleSelect.value : null;
+    var exercises = exercisesForPplAndMuscle(pplGroup, muscle);
+    if (!exercises.length) {
       exerciseSelect.innerHTML = "";
       return;
     }
-    exerciseSelect.innerHTML = group.exercises
-      .slice()
-      .sort(function (a, b) {
-        return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
-      })
+    exerciseSelect.innerHTML = exercises
       .map(function (name) {
         return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + "</option>";
       })
@@ -324,8 +390,10 @@
 
     var prefs = loadPickerPrefs();
     var pick = preferredExercise || prefs.exercise;
-    if (pick && group.exercises.indexOf(pick) !== -1) {
+    if (pick && exercises.indexOf(pick) !== -1) {
       exerciseSelect.value = pick;
+    } else {
+      exerciseSelect.value = exercises[0];
     }
   }
 
@@ -343,6 +411,11 @@
       });
     }
     categorySelect.value = String(Math.max(0, idx));
+
+    var preferredMuscle = exerciseName
+      ? primaryMuscleForExercise(exerciseName)
+      : prefs.muscle;
+    populateMuscleGroups(preferredMuscle);
     populateLibraryExercises(exerciseName);
   }
 
@@ -591,6 +664,13 @@
 
     if (categorySelect) {
       categorySelect.addEventListener("change", function () {
+        populateMuscleGroups(null);
+        populateLibraryExercises(null);
+      });
+    }
+
+    if (muscleSelect) {
+      muscleSelect.addEventListener("change", function () {
         populateLibraryExercises(null);
       });
     }
@@ -725,7 +805,8 @@
           at: Date.now(),
         });
         var group = LIBRARY[Number(categorySelect.value)];
-        savePickerPrefs(group && group.category, name, reps, weight);
+        var muscle = muscleSelect ? muscleSelect.value : null;
+        savePickerPrefs(group && group.category, muscle, name, reps, weight);
         saveStore(store);
         closeSheet();
         renderSession();
@@ -799,6 +880,7 @@
 
   if (hasTodayUI) {
     initCategories();
+    populateMuscleGroups();
     populateLibraryExercises();
     renderSession();
   } else if (hasWeekUI) {
