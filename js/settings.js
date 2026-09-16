@@ -486,7 +486,7 @@
       if (!file) return;
       if (
         !confirm(
-          "Restore this backup? It will replace workouts, macros, weight, maxes, and settings currently on this device."
+          "Restore this backup? It will replace workouts, macros, weight, water, maxes, and settings currently on this device."
         )
       ) {
         restoreFile.value = "";
@@ -529,7 +529,7 @@
   document.getElementById("clear-all-data").addEventListener("click", function () {
     if (
       !confirm(
-        "Clear all saved workouts, maxes, cardio, macros, weight, water, and settings data? This cannot be undone."
+        "Clear all saved workouts, maxes, cardio, macros, weight, water, and settings? This cannot be undone."
       )
     ) {
       return;

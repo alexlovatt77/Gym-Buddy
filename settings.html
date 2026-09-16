@@ -7,16 +7,16 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Settings — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=7" />
+    <link rel="stylesheet" href="css/styles.css?v=9" />
   </head>
   <body>
     <div class="app">
       <header class="masthead">
-        <p class="masthead__brand">Gym Buddy</p>
+        <p class="masthead__brand"><a href="today.html" class="masthead__brand-link">Gym Buddy</a></p>
       </header>
 
       <main class="page">
-        <p class="page__kicker">Preferences</p>
+        <p class="page__kicker">Settings</p>
         <div class="setup-head">
           <h1 class="page__title">Settings</h1>
           <div class="setup-tabs" role="group" aria-label="Settings sections">
@@ -36,16 +36,12 @@
 
             <form class="record-form" id="targets-form">
               <div class="field">
-                <label for="target-glutes">Glutes</label>
-                <select id="target-glutes" required></select>
+                <label for="target-back">Back</label>
+                <select id="target-back" required></select>
               </div>
               <div class="field">
-                <label for="target-quads">Quads</label>
-                <select id="target-quads" required></select>
-              </div>
-              <div class="field">
-                <label for="target-hamstrings">Hamstrings</label>
-                <select id="target-hamstrings" required></select>
+                <label for="target-biceps">Biceps</label>
+                <select id="target-biceps" required></select>
               </div>
               <div class="field">
                 <label for="target-calves">Calves</label>
@@ -56,26 +52,30 @@
                 <select id="target-chest" required></select>
               </div>
               <div class="field">
-                <label for="target-back">Back</label>
-                <select id="target-back" required></select>
+                <label for="target-glutes">Glutes</label>
+                <select id="target-glutes" required></select>
+              </div>
+              <div class="field">
+                <label for="target-hamstrings">Hamstrings</label>
+                <select id="target-hamstrings" required></select>
+              </div>
+              <div class="field">
+                <label for="target-quads">Quads</label>
+                <select id="target-quads" required></select>
               </div>
               <div class="field">
                 <label for="target-shoulders">Shoulders</label>
                 <select id="target-shoulders" required></select>
               </div>
               <div class="field">
-                <label for="target-biceps">Biceps</label>
-                <select id="target-biceps" required></select>
+                <label for="target-traps">Traps</label>
+                <select id="target-traps" required></select>
               </div>
               <div class="field">
                 <label for="target-triceps">Triceps</label>
                 <select id="target-triceps" required></select>
               </div>
-              <div class="field">
-                <label for="target-traps">Traps</label>
-                <select id="target-traps" required></select>
-              </div>
-              <p class="field-error" id="targets-saved" hidden>Targets saved.</p>
+              <p class="section__note" id="targets-saved" hidden>Targets saved.</p>
               <div class="btn-row">
                 <button class="btn" type="submit">Save targets</button>
               </div>
@@ -238,12 +238,12 @@
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
-    <script src="js/app-data.js"></script>
+    <script src="js/app-data.js?v=2"></script>
     <script src="js/nav.js"></script>
     <script src="js/undo.js"></script>
-    <script src="js/meals-defaults.js?v=2"></script>
-    <script src="js/exercise-library.js"></script>
+    <script src="js/meals-defaults.js?v=3"></script>
+    <script src="js/exercise-library.js?v=2"></script>
     <script src="js/targets.js"></script>
-    <script src="js/settings.js?v=3"></script>
+    <script src="js/settings.js?v=4"></script>
   </body>
 </html>

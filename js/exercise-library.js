@@ -1,102 +1,118 @@
 /* Exercise library by primary muscle group + secondary set credits. */
 window.STUDIO_MUSCLE_GROUPS = [
-  "Glutes",
-  "Quads",
-  "Hamstrings",
+  "Back",
+  "Biceps",
   "Calves",
   "Chest",
-  "Back",
+  "Glutes",
+  "Hamstrings",
+  "Quads",
   "Shoulders",
-  "Biceps",
-  "Triceps",
   "Traps",
+  "Triceps",
 ];
 
 window.STUDIO_DEFAULT_TARGETS = {
-  Glutes: 6,
-  Quads: 16,
-  Hamstrings: 12,
+  Back: 20,
+  Biceps: 14,
   Calves: 18,
   Chest: 14,
-  Back: 20,
+  Glutes: 6,
+  Hamstrings: 12,
+  Quads: 16,
   Shoulders: 16,
-  Biceps: 14,
-  Triceps: 14,
   Traps: 10,
+  Triceps: 14,
 };
+
+function studioSortNames(list) {
+  return list.slice().sort(function (a, b) {
+    return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+  });
+}
 
 window.STUDIO_EXERCISE_LIBRARY = [
   {
-    category: "Calves",
-    exercises: ["Calf raises"],
-  },
-  {
-    category: "Quads",
-    exercises: ["Quad extensions", "Elevated lunges", "Quad squats"],
-  },
-  {
-    category: "Hamstrings",
-    exercises: ["Hamstring curls", "Hip thrusts", "Bulgarian split squat"],
+    category: "Back",
+    exercises: studioSortNames([
+      "Bent-over barbell row",
+      "Bent-over smith row",
+      "Cable pull-downs",
+      "Cable rows",
+      "Lat pull-down",
+      "Pull-ups",
+    ]),
   },
   {
     category: "Biceps",
-    exercises: ["Single-arm bicep curls", "Barbell curls", "Bicep pull-downs"],
+    exercises: studioSortNames([
+      "Barbell curls",
+      "Bicep pull-downs",
+      "Cable curls",
+      "Seated decline curls",
+      "Single-arm bicep curls",
+    ]),
   },
   {
-    category: "Triceps",
-    exercises: [
-      "Seated decline curls",
-      "Cable curls",
-      "Tricep rope push-downs",
-      "Skull crushers",
-      "Overhead tricep extensions",
-      "Single-arm tricep push-downs",
-      "Tricep dumbbell bench",
-      "Tricep barbell bench",
-      "Overhead tricep dumbbell raises",
-    ],
+    category: "Calves",
+    exercises: studioSortNames(["Calf raises"]),
   },
   {
     category: "Chest",
-    exercises: [
-      "Incline smith press",
-      "Smith press",
-      "Incline dumbbell press",
-      "Dumbbell press",
+    exercises: studioSortNames([
       "Cable flies",
-      "Machine flies",
       "Chest press",
       "Dips",
-    ],
-  },
-  {
-    category: "Shoulders",
-    exercises: [
-      "Dumbbell shoulder press",
-      "Military press",
-      "Face pulls",
-      "Lateral raises",
-      "Front raises",
-    ],
-  },
-  {
-    category: "Traps",
-    exercises: ["Shrugs"],
-  },
-  {
-    category: "Back",
-    exercises: [
-      "Pull-ups",
-      "Lat pull-down",
-      "Cable rows",
-      "Cable pull-downs",
-      "Bent-over smith row",
-      "Bent-over barbell row",
-    ],
+      "Dumbbell press",
+      "Incline dumbbell press",
+      "Incline smith press",
+      "Machine flies",
+      "Smith press",
+    ]),
   },
   {
     category: "Glutes",
-    exercises: [],
+    exercises: studioSortNames(["Hip thrusts"]),
+  },
+  {
+    category: "Hamstrings",
+    exercises: studioSortNames(["Hamstring curls", "Prone leg curl"]),
+  },
+  {
+    category: "Quads",
+    exercises: studioSortNames([
+      "Bulgarian split squat",
+      "Elevated lunges",
+      "Hack squat",
+      "Quad extensions",
+      "Quad squats",
+    ]),
+  },
+  {
+    category: "Shoulders",
+    exercises: studioSortNames([
+      "Dumbbell shoulder press",
+      "Face pulls",
+      "Front raises",
+      "Lateral raises",
+      "Military press",
+    ]),
+  },
+  {
+    category: "Traps",
+    exercises: studioSortNames(["Shrugs"]),
+  },
+  {
+    category: "Triceps",
+    exercises: studioSortNames([
+      "Overhead tricep dumbbell raises",
+      "Overhead tricep extensions",
+      "Single-arm tricep push-downs",
+      "Skull crushers",
+      "Tricep barbell bench",
+      "Tricep dumbbell bench",
+      "Tricep rope push-downs",
+    ]),
   },
 ];
 
@@ -104,64 +120,66 @@ window.STUDIO_EXERCISE_LIBRARY = [
 window.STUDIO_PPL_LIBRARY = [
   {
     category: "Push",
-    exercises: [
-      "Incline smith press",
-      "Smith press",
-      "Incline dumbbell press",
-      "Dumbbell press",
+    exercises: studioSortNames([
       "Cable flies",
-      "Machine flies",
       "Chest press",
       "Dips",
+      "Dumbbell press",
       "Dumbbell shoulder press",
-      "Military press",
-      "Lateral raises",
       "Front raises",
-      "Seated decline curls",
-      "Cable curls",
-      "Tricep rope push-downs",
-      "Skull crushers",
+      "Incline dumbbell press",
+      "Incline smith press",
+      "Lateral raises",
+      "Machine flies",
+      "Military press",
+      "Overhead tricep dumbbell raises",
       "Overhead tricep extensions",
       "Single-arm tricep push-downs",
-      "Tricep dumbbell bench",
+      "Skull crushers",
+      "Smith press",
       "Tricep barbell bench",
-      "Overhead tricep dumbbell raises",
-    ],
+      "Tricep dumbbell bench",
+      "Tricep rope push-downs",
+    ]),
   },
   {
     category: "Pull",
-    exercises: [
-      "Pull-ups",
-      "Lat pull-down",
-      "Cable rows",
-      "Cable pull-downs",
-      "Bent-over smith row",
+    exercises: studioSortNames([
+      "Barbell curls",
       "Bent-over barbell row",
+      "Bent-over smith row",
+      "Bicep pull-downs",
+      "Cable curls",
+      "Cable pull-downs",
+      "Cable rows",
       "Face pulls",
+      "Lat pull-down",
+      "Pull-ups",
+      "Seated decline curls",
       "Shrugs",
       "Single-arm bicep curls",
-      "Barbell curls",
-      "Bicep pull-downs",
-    ],
+    ]),
   },
   {
     category: "Legs",
-    exercises: [
-      "Quad extensions",
-      "Elevated lunges",
-      "Quad squats",
-      "Hamstring curls",
-      "Hip thrusts",
+    exercises: studioSortNames([
       "Bulgarian split squat",
       "Calf raises",
-    ],
+      "Elevated lunges",
+      "Hack squat",
+      "Hamstring curls",
+      "Hip thrusts",
+      "Prone leg curl",
+      "Quad extensions",
+      "Quad squats",
+    ]),
   },
 ];
 
 /**
  * Primary group gets 1.0 per set. Optional secondaries get 0.5 each.
- * Rules: bench press → shoulders + triceps; dips → triceps; overhead press → triceps;
- * pull-ups → biceps; rows → biceps; squats → glutes; hip thrusts → glutes.
+ * Bench presses → shoulders + triceps; dips → triceps; overhead press → triceps;
+ * pull-ups / rows → biceps; squats / hack squat → glutes; lunges / split squat → glutes.
  */
 window.studioSetCredits = function (exerciseName) {
   var name = String(exerciseName || "").toLowerCase();
@@ -205,6 +223,12 @@ window.studioSetCredits = function (exerciseName) {
     name === "bent-over smith row" ||
     name === "bent-over barbell row";
 
+  var isSquatPattern =
+    name === "quad squats" ||
+    name === "hack squat" ||
+    name === "bulgarian split squat" ||
+    name === "elevated lunges";
+
   if (isBenchPress) {
     addSecondary("Shoulders", 0.5);
     addSecondary("Triceps", 0.5);
@@ -213,8 +237,8 @@ window.studioSetCredits = function (exerciseName) {
   if (isOverheadPress) addSecondary("Triceps", 0.5);
   if (name === "pull-ups") addSecondary("Biceps", 0.5);
   if (isRow) addSecondary("Biceps", 0.5);
-  if (name === "quad squats") addSecondary("Glutes", 0.5);
-  if (name === "hip thrusts") addSecondary("Glutes", 0.5);
+  if (isSquatPattern) addSecondary("Glutes", 0.5);
+  if (name === "hip thrusts") addSecondary("Hamstrings", 0.5);
 
   return credits;
 };

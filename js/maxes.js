@@ -13,15 +13,15 @@
 
   var EXERCISES = {
     rm1: [
-      { id: "smith-squat", label: "Smith squat" },
       { id: "smith-incline-bench", label: "Smith incline bench" },
       { id: "smith-row", label: "Smith row" },
+      { id: "smith-squat", label: "Smith squat" },
     ],
     rm8: [
+      { id: "barbell-curl", label: "Barbell curl" },
       { id: "incline-bench", label: "Incline bench" },
       { id: "shoulder-press", label: "Shoulder press" },
       { id: "smith-row", label: "Smith row" },
-      { id: "barbell-curl", label: "Barbell curl" },
       { id: "smith-squat", label: "Smith squat" },
     ],
   };

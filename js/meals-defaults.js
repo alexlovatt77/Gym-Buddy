@@ -3,7 +3,7 @@ window.STUDIO_DEFAULT_MEALS = [
   {
     id: "m_seed_yoghurt_bowl",
     category: "breakfast",
-    name: "Yoghurt bowl",
+    name: "Yogurt bowl",
     calories: 450,
     protein: 30,
     fat: 18,
@@ -12,7 +12,7 @@ window.STUDIO_DEFAULT_MEALS = [
   {
     id: "m_seed_oats",
     category: "breakfast",
-    name: "Oats",
+    name: "Oatmeal",
     calories: 560,
     protein: 22,
     fat: 17,
@@ -21,7 +21,7 @@ window.STUDIO_DEFAULT_MEALS = [
   {
     id: "m_seed_crockpot_chicken",
     category: "dinner",
-    name: "Crockpot chicken",
+    name: "Slow-cooker chicken",
     calories: 710,
     protein: 68,
     fat: 19,
@@ -36,7 +36,11 @@ window.STUDIO_DEFAULT_MEALS = [
     fat: 7,
     carbs: 20,
   },
-];
+].slice().sort(function (a, b) {
+  var cat = String(a.category).localeCompare(String(b.category));
+  if (cat !== 0) return cat;
+  return String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" });
+});
 
 /**
  * Seed built-in meals only once. Never recreate a meal the user removed.

@@ -313,6 +313,10 @@
       return;
     }
     exerciseSelect.innerHTML = group.exercises
+      .slice()
+      .sort(function (a, b) {
+        return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+      })
       .map(function (name) {
         return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + "</option>";
       })
@@ -735,7 +739,7 @@
 
         if (!finishArmed) {
           finishArmed = true;
-          finishBtn.textContent = "Confirm";
+          finishBtn.textContent = "Confirm finish";
           return;
         }
 
@@ -758,7 +762,7 @@
         if (typeof window.studioSetsWeekRefresh === "function") {
           window.studioSetsWeekRefresh();
         }
-        finishMsg.textContent = "Workout saved. Sets per week is updated.";
+        finishMsg.textContent = "Workout saved. Week volume updated.";
         finishMsg.hidden = false;
         finishMsg.style.color = "var(--fjord)";
       });

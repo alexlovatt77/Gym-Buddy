@@ -71,13 +71,14 @@
   };
 
   if (/[\?&]clear=1(?:&|$)/.test(location.search)) {
+    if (!confirm("Clear all Gym Buddy data on this device?")) {
+      var cleanAbort = location.pathname.split("/").pop() || "index.html";
+      location.replace(cleanAbort);
+      return;
+    }
     window.studioClearAllData();
     var clean = location.pathname.split("/").pop() || "index.html";
     location.replace(clean);
     return;
-  }
-
-  if (localStorage.getItem("studio.demo.bundle")) {
-    window.studioClearAllData();
   }
 })();
