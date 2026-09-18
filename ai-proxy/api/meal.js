@@ -363,9 +363,15 @@ function scoreUsdaFood(food, queryLower) {
     ) {
       score -= 120;
     }
+    if (hasWord(desc, "buttermilk") && !hasWord(queryLower, "buttermilk")) {
+      score -= 150;
+    }
     if (hasWord(desc, "fluid")) score += 25;
     if (/^(milk,|milk )/.test(desc)) score += 30;
-    var altMilks = ["coconut", "almond", "oat", "rice", "soy", "goat", "human", "chocolate", "malted"];
+    // Prefer plain cow's milk over buttermilk / flavored / alt milks.
+    if (/^milk, whole, fluid/.test(desc) || /^milk, fluid, whole/.test(desc)) score += 50;
+    if (/milk, reduced fat, fluid|milk, lowfat, fluid|milk, nonfat, fluid/.test(desc)) score += 20;
+    var altMilks = ["coconut", "almond", "oat", "rice", "soy", "goat", "human", "chocolate", "malted", "filled", "dry", "condensed", "evaporated"];
     for (var k = 0; k < altMilks.length; k++) {
       if (hasWord(desc, altMilks[k]) && !hasWord(queryLower, altMilks[k])) score -= 80;
     }
