@@ -137,7 +137,7 @@
       btn.disabled = true;
       btn.textContent = "Looking up…";
     }
-    setStatus("Matching foods in USDA FoodData…");
+    setStatus("Looking up USDA macros…");
     showPreview(null);
 
     try {

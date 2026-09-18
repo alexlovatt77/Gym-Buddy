@@ -1242,6 +1242,11 @@ a:hover {
   margin: var(--space-5) 0 var(--space-6);
 }
 
+.ai-meal .field,
+.ai-meal .field:last-of-type {
+  margin-bottom: 0;
+}
+
 .ai-meal__composer {
   display: grid;
   gap: var(--space-4);
@@ -1255,32 +1260,55 @@ a:hover {
   margin: 0;
 }
 
-.ai-meal__describe label {
+.ai-meal__describe label,
+.ai-meal__category label {
   display: block;
   margin-bottom: var(--space-2);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-.ai-meal textarea {
+.ai-meal textarea,
+.ai-meal__category select {
   width: 100%;
-  min-height: 7.5rem;
-  padding: 0.9rem 1rem;
+  box-sizing: border-box;
   font-family: var(--font-body);
-  font-size: 1.02rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
   color: var(--ink);
   background: var(--paper);
   border: 1px solid var(--line-strong);
   border-radius: 10px;
+  outline: none;
+}
+
+.ai-meal textarea {
+  min-height: 7.5rem;
+  padding: 0.9rem 1rem;
+  line-height: 1.55;
   resize: vertical;
 }
 
-.ai-meal textarea:focus {
-  outline: none;
+.ai-meal__category select {
+  min-height: 2.75rem;
+  padding: 0.65rem 2.25rem 0.65rem 0.9rem;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% + 2px), calc(100% - 9px) calc(50% + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  background-color: var(--paper);
+}
+
+.ai-meal textarea:focus,
+.ai-meal__category select:focus {
   border-color: var(--fjord);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fjord) 22%, transparent);
 }
@@ -1297,14 +1325,9 @@ a:hover {
   min-width: 0;
 }
 
-.ai-meal__category label {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
+.ai-meal__action {
+  display: flex;
+  align-items: stretch;
 }
 
 .ai-meal__submit {
@@ -1313,8 +1336,19 @@ a:hover {
   white-space: nowrap;
 }
 
-.ai-meal__status {
+.ai-meal__status.field-status {
   margin: 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.ai-meal__status.field-status[hidden] {
+  display: none;
+  padding: 0;
+  border-top: 0;
 }
 
 .ai-meal-preview {
@@ -1329,6 +1363,14 @@ a:hover {
 .ai-meal-preview__head {
   display: grid;
   gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .ai-meal-preview__head {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-5);
+  }
 }
 
 .ai-meal-preview__eyebrow {
@@ -1347,6 +1389,7 @@ a:hover {
   font-weight: 600;
   line-height: 1.2;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .ai-meal-preview__meta {
@@ -1370,18 +1413,19 @@ a:hover {
   border-radius: 10px;
   background: var(--paper-raised);
   text-align: center;
+  min-width: 0;
 }
 
 .ai-meal-preview__total-value {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 3.4vw, 1.2rem);
   font-weight: 600;
   color: var(--ink);
   line-height: 1.1;
 }
 
 .ai-meal-preview__total-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1410,6 +1454,7 @@ a:hover {
   font-size: 1rem;
   font-weight: 600;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .ai-meal-preview__grams {
@@ -1422,6 +1467,7 @@ a:hover {
   font-size: 0.9rem;
   line-height: 1.45;
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
 }
 
 .ai-meal-preview__item-macros {
@@ -1438,6 +1484,10 @@ a:hover {
   gap: var(--space-3);
 }
 
+.ai-meal-preview__actions .btn {
+  min-height: 2.75rem;
+}
+
 .ai-meal-divider {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1445,10 +1495,14 @@ a:hover {
   gap: var(--space-3);
   margin: 0 0 var(--space-5);
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.ai-meal-divider span {
+  white-space: nowrap;
 }
 
 .ai-meal-divider::before,
@@ -1466,14 +1520,24 @@ a:hover {
 
   .ai-meal__tools {
     grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
+  .ai-meal__action,
   .ai-meal__submit {
     width: 100%;
   }
 
   .ai-meal-preview__totals {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-meal-preview__actions {
+    flex-direction: column;
+  }
+
+  .ai-meal-preview__actions .btn {
+    width: 100%;
   }
 }
 
@@ -1486,7 +1550,8 @@ a:hover {
   border-color: var(--line-strong);
 }
 
-[data-theme="fallout"] .ai-meal textarea {
+[data-theme="fallout"] .ai-meal textarea,
+[data-theme="fallout"] .ai-meal__category select {
   border-radius: 0;
   background: #061008;
   border-color: var(--line-strong);
