@@ -1,5 +1,8 @@
 {
   "name": "gym-buddy-ai",
   "private": true,
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo skip"
+  }
 }

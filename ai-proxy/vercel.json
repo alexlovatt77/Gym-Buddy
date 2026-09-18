@@ -1,4 +1,7 @@
 {
+  "framework": null,
+  "installCommand": null,
+  "buildCommand": null,
   "headers": [
     {
       "source": "/api/(.*)",
