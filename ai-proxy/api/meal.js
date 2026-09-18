@@ -305,6 +305,14 @@ function scoreUsdaFood(food, queryLower) {
   if (desc.indexOf("cooked") !== -1 && queryLower.indexOf("raw") === -1) score += 4;
   if (desc.indexOf("raw") !== -1 && queryLower.indexOf("raw") === -1) score -= 8;
 
+  var nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
+  var hasEnergy = nutrients.some(function (n) {
+    var id = Number(n && (n.nutrientId || n.nutrientNumber) || 0);
+    var unit = String((n && n.unitName) || "").toUpperCase();
+    return id === 1008 || unit === "KCAL";
+  });
+  if (hasEnergy) score += 15;
+
   return score;
 }
 
@@ -355,10 +363,19 @@ function extractPer100(food) {
     return null;
   }
 
+  var p = protein == null ? 0 : protein;
+  var f = fat == null ? 0 : fat;
+  var c = carbs == null ? 0 : carbs;
+  var kcal = calories == null ? 0 : calories;
+  // Some Foundation search hits omit Energy; derive Atwater kcal when needed.
+  if (kcal <= 0 && (p > 0 || f > 0 || c > 0)) {
+    kcal = p * 4 + c * 4 + f * 9;
+  }
+
   return {
-    calories: calories == null ? 0 : calories,
-    protein: protein == null ? 0 : protein,
-    fat: fat == null ? 0 : fat,
-    carbs: carbs == null ? 0 : carbs,
+    calories: kcal,
+    protein: p,
+    fat: f,
+    carbs: c,
   };
 }
