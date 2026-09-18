@@ -30,12 +30,15 @@
         '<ul class="ai-meal-preview__items">' +
         meal.items
           .map(function (item) {
+            var portionBit = item.portion
+              ? escapeHtml(item.portion)
+              : escapeHtml(item.label || "");
             return (
               "<li>" +
-              escapeHtml(item.label || "") +
-              " (" +
+              portionBit +
+              " ≈ " +
               item.grams +
-              "g) → " +
+              "g → " +
               escapeHtml(item.matched || "") +
               ": " +
               item.calories +
@@ -91,7 +94,7 @@
     var btn = document.getElementById("ai-meal-estimate");
     var description = input ? String(input.value || "").trim() : "";
     if (!description) {
-      setStatus("Describe what you ate, with amounts.", true);
+      setStatus("Describe what you ate (portions like 2 servings are fine).", true);
       return;
     }
 

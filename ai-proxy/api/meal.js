@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
     typeof body.category === "string" ? body.category.trim().toLowerCase() : "";
 
   if (!description) {
-    return res.status(400).json({ error: "Describe what you ate, with amounts." });
+    return res.status(400).json({ error: "Describe what you ate (portions are fine)." });
   }
   if (description.length > 2000) {
     description = description.slice(0, 2000);
@@ -51,7 +51,8 @@ module.exports = async function handler(req, res) {
     var parsed = await parseMealItems(description, hintLine);
     if (!parsed || !Array.isArray(parsed.items) || !parsed.items.length) {
       return res.status(400).json({
-        error: "Could not find foods with amounts. Example: 170g chicken breast, 1 cup rice.",
+        error:
+          "Could not parse foods. Try something like: 4 skinless boneless chicken breasts, 2 servings butter.",
       });
     }
 
@@ -61,18 +62,21 @@ module.exports = async function handler(req, res) {
     if (missing.length) {
       return res.status(400).json({
         error:
-          "Add amounts for: " +
+          "Need a rough portion for: " +
           missing
             .map(function (item) {
               return item.label || item.query || "item";
             })
-            .join(", "),
+            .join(", ") +
+          ". Example: 2 servings, 1 breast, 1 cup.",
       });
     }
 
     var lookedUp = [];
+    var usedEstimate = false;
     for (var i = 0; i < parsed.items.length; i++) {
       var item = parsed.items[i];
+      if (item.estimated) usedEstimate = true;
       var match = await lookupUsdaFood(usdaKey, item.query || item.label);
       if (!match) {
         return res.status(404).json({
@@ -82,7 +86,9 @@ module.exports = async function handler(req, res) {
       var scale = item.grams / 100;
       lookedUp.push({
         label: item.label || item.query,
+        portion: item.portion || "",
         grams: Math.round(item.grams),
+        estimated: !!item.estimated,
         matched: match.description,
         fdcId: match.fdcId,
         calories: roundMacro(match.per100.calories * scale),
@@ -113,7 +119,7 @@ module.exports = async function handler(req, res) {
       protein: Math.round(totals.protein),
       fat: Math.round(totals.fat),
       carbs: Math.round(totals.carbs),
-      confidence: "high",
+      confidence: usedEstimate ? "medium" : "high",
       source: "usda",
       items: lookedUp,
       usdaDemo: usingDemoUsda,
@@ -148,16 +154,22 @@ async function parseMealItems(description, hintLine) {
             "You parse food diary text into USDA-searchable items. " +
             "Return JSON only with keys: name (short meal title), " +
             "category (breakfast|lunch|dinner|snack|dessert), " +
-            "items (array of {label, query, grams}). " +
+            "items (array of {label, query, portion, grams, estimated}). " +
             "label = human food name. query = plain USDA-style search terms " +
-            "(prefer simple whole foods: e.g. 'chicken breast meat only cooked', " +
-            "'rice white long-grain cooked', 'egg whole cooked', 'banana raw'). " +
-            "Avoid words like brand, recipe, breaded, fried, lunchmeat unless the user said that. " +
-            "grams = total grams for that food after converting the user's amount " +
-            "(oz→g, lb→g, cups/tbsp/tsp using typical density for that food, pieces/slices using typical weight). " +
-            "Only include foods with a usable amount. Never invent amounts the user did not give. " +
-            "If an amount is missing, still include the item with grams: 0. " +
-            "Do not estimate nutrition. Do not include markdown or extra keys.",
+            "(prefer simple whole foods: e.g. 'chicken breast meat only cooked skinless boneless', " +
+            "'butter salted', 'rice white long-grain cooked', 'egg whole cooked'). " +
+            "Avoid brand/recipe/breaded/fried/lunchmeat unless the user said that. " +
+            "portion = short copy of what the user said (e.g. '4 skinless boneless chicken breasts', '2 servings butter'). " +
+            "grams = TOTAL grams for that line after converting portions to weight. " +
+            "Rough estimates are expected and encouraged: " +
+            "servings, pieces, breasts, thighs, eggs, slices, handfuls, scoops, cups, tbsp, tsp, oz. " +
+            "Use typical edible cooked weights when the user gives counts " +
+            "(e.g. 1 medium skinless boneless chicken breast ≈ 170g cooked; " +
+            "1 large egg ≈ 50g; 1 serving butter ≈ 14g / 1 tbsp; 1 slice bread ≈ 28g). " +
+            "estimated=true when grams came from a typical portion rather than an exact weight the user gave. " +
+            "estimated=false only if the user gave an exact mass (g, kg, oz, lb). " +
+            "If they name a food with no usable portion at all, set grams: 0. " +
+            "Do not invent nutrition numbers. Do not include markdown or extra keys.",
         },
         {
           role: "user",
@@ -196,7 +208,9 @@ async function parseMealItems(description, hintLine) {
       return {
         label: String((item && item.label) || (item && item.query) || "").trim().slice(0, 80),
         query: String((item && item.query) || (item && item.label) || "").trim().slice(0, 120),
+        portion: String((item && item.portion) || "").trim().slice(0, 80),
         grams: Math.max(0, Number(item && item.grams) || 0),
+        estimated: !!(item && item.estimated),
       };
     })
     .filter(function (item) {
