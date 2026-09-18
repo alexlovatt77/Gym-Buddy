@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
     if (!parsed || !Array.isArray(parsed.items) || !parsed.items.length) {
       return res.status(400).json({
         error:
-          "Could not parse foods. Try something like: 4 skinless boneless chicken breasts, 2 servings butter.",
+          "Could not parse foods. Try something like: 4 chicken breasts, 2 servings milk.",
       });
     }
 
@@ -74,23 +74,41 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    var lookedUp = [];
-    var usedEstimate = false;
+    var candidateSets = [];
     for (var i = 0; i < parsed.items.length; i++) {
       var item = parsed.items[i];
-      if (item.estimated) usedEstimate = true;
-      var match = await lookupUsdaFood(usdaKey, item.query || item.label);
-      if (!match) {
+      var candidates = await searchUsdaCandidates(usdaKey, item.query || item.label);
+      if (!candidates.length) {
         return res.status(404).json({
-          error: 'No USDA match for "' + (item.label || item.query) + '". Try a clearer food name.',
+          error:
+            'No USDA matches for "' +
+            (item.label || item.query) +
+            '". Try a clearer food name.',
         });
       }
-      var scale = item.grams / 100;
+      candidateSets.push({ item: item, candidates: candidates });
+    }
+
+    var picks = await chooseUsdaMatches(description, candidateSets);
+
+    var lookedUp = [];
+    var usedEstimate = false;
+    for (var j = 0; j < candidateSets.length; j++) {
+      var row = candidateSets[j];
+      var item2 = row.item;
+      if (item2.estimated) usedEstimate = true;
+      var pickId = picks[j];
+      var match =
+        row.candidates.find(function (c) {
+          return Number(c.fdcId) === Number(pickId);
+        }) || row.candidates[0];
+
+      var scale = item2.grams / 100;
       lookedUp.push({
-        label: item.label || item.query,
-        portion: item.portion || "",
-        grams: Math.round(item.grams),
-        estimated: !!item.estimated,
+        label: item2.label || item2.query,
+        portion: item2.portion || "",
+        grams: Math.round(item2.grams),
+        estimated: !!item2.estimated,
         matched: match.description,
         fdcId: match.fdcId,
         calories: roundMacro(match.per100.calories * scale),
@@ -101,11 +119,11 @@ module.exports = async function handler(req, res) {
     }
 
     var totals = lookedUp.reduce(
-      function (acc, row) {
-        acc.calories += row.calories;
-        acc.protein += row.protein;
-        acc.fat += row.fat;
-        acc.carbs += row.carbs;
+      function (acc, row2) {
+        acc.calories += row2.calories;
+        acc.protein += row2.protein;
+        acc.fat += row2.fat;
+        acc.carbs += row2.carbs;
         return acc;
       },
       { calories: 0, protein: 0, fat: 0, carbs: 0 }
@@ -138,7 +156,7 @@ function roundMacro(value) {
   return Math.max(0, Math.round(Number(value) || 0));
 }
 
-async function parseMealItems(description, hintLine) {
+async function openaiJson(messages, model) {
   var openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -146,38 +164,10 @@ async function parseMealItems(description, hintLine) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4.1-mini",
+      model: model || "gpt-4.1",
       temperature: 0,
       response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You parse food diary text into USDA-searchable items. " +
-            "Return JSON only with keys: name (short meal title), " +
-            "category (breakfast|lunch|dinner|snack|dessert), " +
-            "items (array of {label, query, portion, grams, estimated}). " +
-            "label = human food name. query = plain USDA-style search terms for the SAME food the user meant. " +
-            "Examples: milk → 'Milk, whole, fluid'; butter → 'Butter, salted'; " +
-            "chicken breast → 'chicken breast meat only cooked skinless boneless'; " +
-            "rice → 'rice white long-grain cooked'; egg → 'egg whole cooked'. " +
-            "Do not turn milk into cheese, ricotta, yogurt, cream, or flavored milk unless the user said that. " +
-            "Avoid brand/recipe/breaded/fried/lunchmeat unless the user said that. " +
-            "portion = short copy of what the user said (e.g. '2 servings of milk', '4 chicken breasts'). " +
-            "grams = TOTAL grams for that line after converting portions to weight. " +
-            "Rough estimates are expected: servings, pieces, breasts, eggs, slices, cups, tbsp, tsp, oz. " +
-            "Typical portions: 1 serving / 1 cup milk ≈ 244g; 1 tbsp / 1 serving butter ≈ 14g; " +
-            "1 medium skinless boneless chicken breast ≈ 170g cooked; 1 large egg ≈ 50g; 1 slice bread ≈ 28g. " +
-            "estimated=true when grams came from a typical portion rather than an exact weight. " +
-            "estimated=false only if the user gave an exact mass (g, kg, oz, lb). " +
-            "If they name a food with no usable portion at all, set grams: 0. " +
-            "Do not invent nutrition numbers. Do not include markdown or extra keys.",
-        },
-        {
-          role: "user",
-          content: hintLine + "\nMeal description:\n" + description,
-        },
-      ],
+      messages: messages,
     }),
   });
 
@@ -197,12 +187,48 @@ async function parseMealItems(description, hintLine) {
       ? String(data.choices[0].message.content).trim()
       : "";
 
-  var parsed;
   try {
-    parsed = JSON.parse(raw);
+    return JSON.parse(raw);
   } catch (err) {
-    throw new Error("Could not parse meal items.");
+    throw new Error("Could not parse AI response.");
   }
+}
+
+async function parseMealItems(description, hintLine) {
+  var parsed = await openaiJson(
+    [
+      {
+        role: "system",
+        content:
+          "You are a sharp food-diary coach helping one person log meals. " +
+          "Read casual language the way a careful human would: " +
+          "'milk' means drinking milk, not ricotta/cheese/yogurt; " +
+          "'butter' means butter, not buttermilk; " +
+          "'chicken breast' means plain chicken breast, not breaded tenders. " +
+          "Use common sense about what they almost certainly meant. " +
+          "Return JSON only with keys: name (short meal title), " +
+          "category (breakfast|lunch|dinner|snack|dessert), " +
+          "items (array of {label, query, portion, grams, estimated}). " +
+          "label = plain food name. " +
+          "query = best USDA FoodData search string for THAT exact food " +
+          "(include form cues like fluid/cooked/raw/skinless when helpful). " +
+          "portion = short echo of their wording. " +
+          "grams = TOTAL grams after converting rough portions " +
+          "(servings, breasts, eggs, cups, tbsp, slices, handfuls). " +
+          "Defaults: 1 serving/cup milk ≈ 244g; 1 serving/tbsp butter ≈ 14g; " +
+          "1 medium cooked chicken breast ≈ 170g; 1 large egg ≈ 50g; 1 slice bread ≈ 28g. " +
+          "If fat % is not said for milk, assume whole milk. " +
+          "estimated=true unless they gave an exact mass (g/kg/oz/lb). " +
+          "If a food has no usable portion, grams: 0. " +
+          "Do not invent nutrition numbers.",
+      },
+      {
+        role: "user",
+        content: hintLine + "\nMeal description:\n" + description,
+      },
+    ],
+    "gpt-4.1"
+  );
 
   var items = Array.isArray(parsed.items) ? parsed.items : [];
   parsed.items = items
@@ -223,16 +249,15 @@ async function parseMealItems(description, hintLine) {
   return parsed;
 }
 
-async function lookupUsdaFood(apiKey, query) {
-  var searchQuery = normalizeUsdaQuery(query);
+async function searchUsdaCandidates(apiKey, query) {
   var searchRes = await fetch(
     "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + encodeURIComponent(apiKey),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        query: searchQuery,
-        pageSize: 40,
+        query: query,
+        pageSize: 25,
         dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
       }),
     }
@@ -246,167 +271,82 @@ async function lookupUsdaFood(apiKey, query) {
   }
 
   var foods = Array.isArray(searchData.foods) ? searchData.foods : [];
-  var best = null;
-  var bestScore = -Infinity;
-  var q = String(searchQuery || query || "").toLowerCase();
-
+  var out = [];
   for (var i = 0; i < foods.length; i++) {
     var food = foods[i];
     var per100 = extractPer100(food);
     if (!per100) continue;
-    var score = scoreUsdaFood(food, q);
-    if (score > bestScore) {
-      bestScore = score;
-      best = {
-        fdcId: food.fdcId,
-        description: String(food.description || query).trim().slice(0, 120),
-        per100: per100,
-      };
-    }
+    out.push({
+      fdcId: food.fdcId,
+      description: String(food.description || query).trim().slice(0, 140),
+      dataType: String(food.dataType || ""),
+      per100: per100,
+    });
+    if (out.length >= 15) break;
   }
-  return best;
+  return out;
 }
 
-function normalizeUsdaQuery(query) {
-  var q = String(query || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s,]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+async function chooseUsdaMatches(originalDescription, candidateSets) {
+  var payload = candidateSets.map(function (row, index) {
+    return {
+      index: index,
+      label: row.item.label,
+      portion: row.item.portion,
+      query: row.item.query,
+      grams: row.item.grams,
+      candidates: row.candidates.map(function (c) {
+        return {
+          fdcId: c.fdcId,
+          description: c.description,
+          dataType: c.dataType,
+          per100kcal: Math.round(c.per100.calories),
+        };
+      }),
+    };
+  });
 
-  // Keep common drinks/foods from drifting into related products (e.g. milk → ricotta).
-  if (
-    /^(milk|whole milk|milk whole|2% milk|1% milk|skim milk|fat free milk)(\s|,|$)/.test(q) ||
-    /milk.*fluid|fluid.*milk/.test(q) ||
-    q.indexOf("milk") !== -1 && q.indexOf("cheese") === -1 && q.indexOf("ricotta") === -1 && tokensAreMostlyMilk(q)
-  ) {
-    if (/\b(skim|fat free|nonfat|non fat)\b/.test(q)) return "Milk, nonfat, fluid";
-    if (/\b(1%|1 percent|lowfat|low fat)\b/.test(q)) return "Milk, lowfat, fluid, 1% milkfat";
-    if (/\b(2%|2 percent|reduced fat)\b/.test(q)) return "Milk, reduced fat, fluid, 2% milkfat";
-    return "Milk, whole, 3.25% milkfat";
-  }
-  if (/^butter\b/.test(q) && q.indexOf("butter milk") === -1 && q.indexOf("buttermilk") === -1) {
-    return "Butter, salted";
-  }
-  return query;
-}
-
-function tokensAreMostlyMilk(q) {
-  // True for queries like "milk whole", "milk, whole, fluid", "whole milk".
-  var cleaned = q.replace(/milk|whole|fluid|cow|vitamin|added|and|with/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
-  return cleaned.length === 0;
-}
-
-function hasWord(text, word) {
-  return new RegExp("(^|[^a-z0-9])" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-z0-9]|$)", "i").test(
-    text
+  var chosen = await openaiJson(
+    [
+      {
+        role: "system",
+        content:
+          "You choose the best USDA FoodData Central entry for each food the user ate. " +
+          "Think like a careful human coach reading a food diary. " +
+          "Use the user's original wording and common sense: " +
+          "milk → drinking milk (usually whole/fluid cow's milk), NEVER ricotta/cheese/yogurt unless said; " +
+          "butter → butter, not buttermilk; " +
+          "chicken breast → plain chicken breast meat, not breaded/nuggets/lunchmeat unless said; " +
+          "prefer simple whole-food SR Legacy/Foundation entries over desserts, powders, baby food, or flavored variants. " +
+          "Return JSON only: {\"picks\":[{\"index\":0,\"fdcId\":123,\"why\":\"short\"}]}. " +
+          "Every index must appear once. fdcId MUST be one of the provided candidates.",
+      },
+      {
+        role: "user",
+        content:
+          "Original meal text:\n" +
+          originalDescription +
+          "\n\nChoose one USDA match per item:\n" +
+          JSON.stringify(payload),
+      },
+    ],
+    "gpt-4.1"
   );
-}
 
-function scoreUsdaFood(food, queryLower) {
-  var desc = String(food.description || "").toLowerCase();
-  var dataType = String(food.dataType || "");
-  var score = 0;
+  var picksArr = Array.isArray(chosen.picks) ? chosen.picks : [];
+  var byIndex = {};
+  for (var i = 0; i < picksArr.length; i++) {
+    var p = picksArr[i];
+    if (p && p.index != null) byIndex[Number(p.index)] = Number(p.fdcId);
+  }
 
-  if (dataType === "Foundation") score += 25;
-  else if (dataType === "SR Legacy") score += 35;
-  else if (dataType.indexOf("Survey") !== -1) score += 20;
-
-  var tokens = queryLower.split(/[^a-z0-9]+/).filter(function (t) {
-    return t && t.length > 1 && ["and", "with", "the", "only"].indexOf(t) === -1;
+  return candidateSets.map(function (row, index) {
+    var id = byIndex[index];
+    var ok = row.candidates.some(function (c) {
+      return Number(c.fdcId) === Number(id);
+    });
+    return ok ? id : row.candidates[0].fdcId;
   });
-  for (var i = 0; i < tokens.length; i++) {
-    if (hasWord(desc, tokens[i])) score += 10;
-  }
-
-  // Prefer descriptions that start with the main food word.
-  var main = tokens[0] || "";
-  if (main && (desc.indexOf(main + ",") === 0 || desc.indexOf(main + " ") === 0)) {
-    score += 40;
-  } else if (main && hasWord(desc, main)) {
-    score += 5;
-  } else if (main) {
-    score -= 40;
-  }
-
-  var junk = [
-    "breaded",
-    "battered",
-    "fried",
-    "fast food",
-    "lunchmeat",
-    "lunch meat",
-    "nugget",
-    "tenders",
-    "patty",
-    "with gravy",
-    "canned",
-    "babyfood",
-    "baby food",
-    "imitation",
-    "dessert",
-    "frozen",
-    "powder",
-    "protein supplement",
-    "crackers",
-    "cracker",
-  ];
-  for (var j = 0; j < junk.length; j++) {
-    if (desc.indexOf(junk[j]) !== -1 && queryLower.indexOf(junk[j]) === -1) {
-      score -= 50;
-    }
-  }
-
-  // Milk must stay milk — not cheese made from milk.
-  if (hasWord(queryLower, "milk") && !hasWord(queryLower, "cheese") && !hasWord(queryLower, "ricotta")) {
-    if (
-      hasWord(desc, "cheese") ||
-      hasWord(desc, "ricotta") ||
-      hasWord(desc, "yogurt") ||
-      hasWord(desc, "yoghurt") ||
-      hasWord(desc, "ice cream") ||
-      (hasWord(desc, "cream") && !/\bcream\b/.test(queryLower))
-    ) {
-      score -= 120;
-    }
-    if (hasWord(desc, "buttermilk") && !hasWord(queryLower, "buttermilk")) {
-      score -= 150;
-    }
-    if (hasWord(desc, "fluid")) score += 10;
-    if (/^(milk,|milk )/.test(desc)) score += 30;
-    // Prefer plain cow's milk over buttermilk / flavored / alt milks.
-    if (/milk, whole, 3\.25%/.test(desc) || /^milk, whole\b/.test(desc)) score += 80;
-    if (/milk, reduced fat|milk, lowfat|milk, nonfat|milk, skim/.test(desc) && !/lowfat|reduced|nonfat|skim|1%|2%/.test(queryLower)) {
-      score -= 60;
-    }
-    if (/milk, reduced fat, fluid|milk, lowfat, fluid|milk, nonfat, fluid/.test(desc) && /1%|2%|lowfat|nonfat|skim|reduced/.test(queryLower)) {
-      score += 40;
-    }
-    var altMilks = ["coconut", "almond", "oat", "rice", "soy", "goat", "human", "chocolate", "malted", "filled", "dry", "condensed", "evaporated"];
-    for (var k = 0; k < altMilks.length; k++) {
-      if (hasWord(desc, altMilks[k]) && !hasWord(queryLower, altMilks[k])) score -= 80;
-    }
-  }
-
-  // Butter should not become buttermilk unless asked.
-  if (hasWord(queryLower, "butter") && !hasWord(queryLower, "buttermilk")) {
-    if (hasWord(desc, "buttermilk")) score -= 100;
-  }
-
-  if (desc.indexOf("meat only") !== -1) score += 12;
-  if (desc.indexOf("skinless") !== -1) score += 6;
-  if (desc.indexOf("cooked") !== -1 && queryLower.indexOf("raw") === -1) score += 4;
-  if (desc.indexOf("raw") !== -1 && queryLower.indexOf("raw") === -1) score -= 8;
-
-  var nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
-  var hasEnergy = nutrients.some(function (n) {
-    var id = Number((n && (n.nutrientId || n.nutrientNumber)) || 0);
-    var unit = String((n && n.unitName) || "").toUpperCase();
-    return id === 1008 || unit === "KCAL";
-  });
-  if (hasEnergy) score += 15;
-
-  return score;
 }
 
 function extractPer100(food) {
@@ -460,7 +400,6 @@ function extractPer100(food) {
   var f = fat == null ? 0 : fat;
   var c = carbs == null ? 0 : carbs;
   var kcal = calories == null ? 0 : calories;
-  // Some Foundation search hits omit Energy; derive Atwater kcal when needed.
   if (kcal <= 0 && (p > 0 || f > 0 || c > 0)) {
     kcal = p * 4 + c * 4 + f * 9;
   }
