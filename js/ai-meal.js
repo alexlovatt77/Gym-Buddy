@@ -13,6 +13,14 @@
     el.classList.toggle("is-error", !!isError);
   }
 
+  function titleCase(value) {
+    return String(value || "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, function (ch) {
+        return ch.toUpperCase();
+      });
+  }
+
   function showPreview(meal) {
     var preview = document.getElementById("ai-meal-preview");
     if (!preview) return;
@@ -34,20 +42,31 @@
               ? escapeHtml(item.portion)
               : escapeHtml(item.label || "");
             return (
-              "<li>" +
+              '<li class="ai-meal-preview__item">' +
+              '<div class="ai-meal-preview__item-main">' +
+              '<p class="ai-meal-preview__item-portion">' +
               portionBit +
-              " ≈ " +
+              ' <span class="ai-meal-preview__grams">≈ ' +
               item.grams +
-              "g → " +
+              "g</span></p>" +
+              '<p class="ai-meal-preview__item-match">' +
               escapeHtml(item.matched || "") +
-              ": " +
+              "</p>" +
+              "</div>" +
+              '<div class="ai-meal-preview__item-macros">' +
+              "<span>" +
               item.calories +
-              " kcal · P" +
+              " kcal</span>" +
+              "<span>P " +
               item.protein +
-              " F" +
+              "g</span>" +
+              "<span>F " +
               item.fat +
-              " C" +
+              "g</span>" +
+              "<span>C " +
               item.carbs +
+              "g</span>" +
+              "</div>" +
               "</li>"
             );
           })
@@ -57,24 +76,35 @@
 
     preview.hidden = false;
     preview.innerHTML =
-      '<p class="ai-meal-preview__title">' +
-      escapeHtml(meal.name) +
-      "</p>" +
-      '<p class="ai-meal-preview__meta">' +
-      escapeHtml(meal.category) +
-      " · " +
-      meal.calories +
-      " kcal · P " +
-      meal.protein +
-      "g · F " +
-      meal.fat +
-      "g · C " +
-      meal.carbs +
-      "g" +
+      '<div class="ai-meal-preview__head">' +
+      '<div class="ai-meal-preview__identity">' +
+      '<p class="ai-meal-preview__eyebrow">Review before adding' +
       (meal.source === "usda" ? " · USDA" : "") +
       "</p>" +
+      '<h3 class="ai-meal-preview__title">' +
+      escapeHtml(meal.name) +
+      "</h3>" +
+      '<p class="ai-meal-preview__meta">' +
+      escapeHtml(titleCase(meal.category)) +
+      "</p>" +
+      "</div>" +
+      '<div class="ai-meal-preview__totals" aria-label="Macro totals">' +
+      '<div class="ai-meal-preview__total"><span class="ai-meal-preview__total-value">' +
+      meal.calories +
+      '</span><span class="ai-meal-preview__total-label">kcal</span></div>' +
+      '<div class="ai-meal-preview__total"><span class="ai-meal-preview__total-value">' +
+      meal.protein +
+      '</span><span class="ai-meal-preview__total-label">Protein</span></div>' +
+      '<div class="ai-meal-preview__total"><span class="ai-meal-preview__total-value">' +
+      meal.fat +
+      '</span><span class="ai-meal-preview__total-label">Fat</span></div>' +
+      '<div class="ai-meal-preview__total"><span class="ai-meal-preview__total-value">' +
+      meal.carbs +
+      '</span><span class="ai-meal-preview__total-label">Carbs</span></div>' +
+      "</div>" +
+      "</div>" +
       itemsHtml +
-      '<div class="btn-row">' +
+      '<div class="ai-meal-preview__actions">' +
       '<button class="btn" type="button" id="ai-meal-confirm">Add to day</button>' +
       '<button class="btn btn--ghost" type="button" id="ai-meal-cancel">Cancel</button>' +
       "</div>";
@@ -94,12 +124,15 @@
     var btn = document.getElementById("ai-meal-estimate");
     var description = input ? String(input.value || "").trim() : "";
     if (!description) {
-      setStatus("Describe what you ate (portions like 2 servings are fine).", true);
+      setStatus("Describe what you ate — portions like “2 servings” are fine.", true);
       return;
     }
 
-    if (btn) btn.disabled = true;
-    setStatus("Looking up macros in USDA…");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Looking up…";
+    }
+    setStatus("Matching foods in USDA FoodData…");
     showPreview(null);
 
     try {
@@ -120,8 +153,8 @@
       if (!data.meal) throw new Error("No meal data returned.");
       setStatus(
         data.meal.usdaDemo
-          ? "Check the USDA matches, then add it. (Using shared USDA demo key — add your free USDA_API_KEY in Vercel for reliability.)"
-          : "Check the USDA matches, then add it."
+          ? "Review the matches below, then add. Tip: add your own USDA_API_KEY in Vercel for reliability."
+          : "Review the matches below, then add to today’s log."
       );
       showPreview(data.meal);
     } catch (err) {
@@ -136,7 +169,10 @@
       }
       setStatus(message, true);
     } finally {
-      if (btn) btn.disabled = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Look up macros";
+      }
     }
   }
 
