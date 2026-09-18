@@ -149,7 +149,10 @@ async function parseMealItems(description, hintLine) {
             "Return JSON only with keys: name (short meal title), " +
             "category (breakfast|lunch|dinner|snack|dessert), " +
             "items (array of {label, query, grams}). " +
-            "label = human food name. query = plain English search for USDA FoodData Central. " +
+            "label = human food name. query = plain USDA-style search terms " +
+            "(prefer simple whole foods: e.g. 'chicken breast meat only cooked', " +
+            "'rice white long-grain cooked', 'egg whole cooked', 'banana raw'). " +
+            "Avoid words like brand, recipe, breaded, fried, lunchmeat unless the user said that. " +
             "grams = total grams for that food after converting the user's amount " +
             "(oz→g, lb→g, cups/tbsp/tsp using typical density for that food, pieces/slices using typical weight). " +
             "Only include foods with a usable amount. Never invent amounts the user did not give. " +
@@ -212,7 +215,7 @@ async function lookupUsdaFood(apiKey, query) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: query,
-        pageSize: 8,
+        pageSize: 25,
         dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
       }),
     }
@@ -226,17 +229,69 @@ async function lookupUsdaFood(apiKey, query) {
   }
 
   var foods = Array.isArray(searchData.foods) ? searchData.foods : [];
+  var best = null;
+  var bestScore = -Infinity;
+  var q = String(query || "").toLowerCase();
+
   for (var i = 0; i < foods.length; i++) {
     var food = foods[i];
     var per100 = extractPer100(food);
     if (!per100) continue;
-    return {
-      fdcId: food.fdcId,
-      description: String(food.description || query).trim().slice(0, 120),
-      per100: per100,
-    };
+    var score = scoreUsdaFood(food, q);
+    if (score > bestScore) {
+      bestScore = score;
+      best = {
+        fdcId: food.fdcId,
+        description: String(food.description || query).trim().slice(0, 120),
+        per100: per100,
+      };
+    }
   }
-  return null;
+  return best;
+}
+
+function scoreUsdaFood(food, queryLower) {
+  var desc = String(food.description || "").toLowerCase();
+  var dataType = String(food.dataType || "");
+  var score = 0;
+
+  if (dataType === "Foundation") score += 40;
+  else if (dataType === "SR Legacy") score += 30;
+  else if (dataType.indexOf("Survey") !== -1) score += 10;
+
+  var tokens = queryLower.split(/[^a-z0-9]+/).filter(Boolean);
+  for (var i = 0; i < tokens.length; i++) {
+    if (desc.indexOf(tokens[i]) !== -1) score += 8;
+  }
+
+  var junk = [
+    "breaded",
+    "battered",
+    "fried",
+    "fast food",
+    "lunchmeat",
+    "lunch meat",
+    "nugget",
+    "tenders",
+    "patty",
+    "with gravy",
+    "canned",
+    "babyfood",
+    "baby food",
+    "imitation",
+  ];
+  for (var j = 0; j < junk.length; j++) {
+    if (desc.indexOf(junk[j]) !== -1 && queryLower.indexOf(junk[j]) === -1) {
+      score -= 50;
+    }
+  }
+
+  if (desc.indexOf("meat only") !== -1) score += 12;
+  if (desc.indexOf("skinless") !== -1) score += 6;
+  if (desc.indexOf("cooked") !== -1 && queryLower.indexOf("raw") === -1) score += 4;
+  if (desc.indexOf("raw") !== -1 && queryLower.indexOf("raw") === -1) score -= 8;
+
+  return score;
 }
 
 function extractPer100(food) {
