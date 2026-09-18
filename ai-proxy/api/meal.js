@@ -277,18 +277,24 @@ function normalizeUsdaQuery(query) {
   // Keep common drinks/foods from drifting into related products (e.g. milk → ricotta).
   if (
     /^(milk|whole milk|milk whole|2% milk|1% milk|skim milk|fat free milk)(\s|,|$)/.test(q) ||
-    q === "milk fluid whole" ||
-    q === "milk, whole, fluid"
+    /milk.*fluid|fluid.*milk/.test(q) ||
+    q.indexOf("milk") !== -1 && q.indexOf("cheese") === -1 && q.indexOf("ricotta") === -1 && tokensAreMostlyMilk(q)
   ) {
     if (/\b(skim|fat free|nonfat|non fat)\b/.test(q)) return "Milk, nonfat, fluid";
-    if (/\b(1%|1 percent|lowfat|low fat)\b/.test(q)) return "Milk, lowfat, fluid, 1%";
-    if (/\b(2%|2 percent|reduced fat)\b/.test(q)) return "Milk, reduced fat, fluid, 2%";
-    return "Milk, whole, fluid";
+    if (/\b(1%|1 percent|lowfat|low fat)\b/.test(q)) return "Milk, lowfat, fluid, 1% milkfat";
+    if (/\b(2%|2 percent|reduced fat)\b/.test(q)) return "Milk, reduced fat, fluid, 2% milkfat";
+    return "Milk, whole, 3.25% milkfat";
   }
   if (/^butter\b/.test(q) && q.indexOf("butter milk") === -1 && q.indexOf("buttermilk") === -1) {
     return "Butter, salted";
   }
   return query;
+}
+
+function tokensAreMostlyMilk(q) {
+  // True for queries like "milk whole", "milk, whole, fluid", "whole milk".
+  var cleaned = q.replace(/milk|whole|fluid|cow|vitamin|added|and|with/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+  return cleaned.length === 0;
 }
 
 function hasWord(text, word) {
@@ -366,11 +372,16 @@ function scoreUsdaFood(food, queryLower) {
     if (hasWord(desc, "buttermilk") && !hasWord(queryLower, "buttermilk")) {
       score -= 150;
     }
-    if (hasWord(desc, "fluid")) score += 25;
+    if (hasWord(desc, "fluid")) score += 10;
     if (/^(milk,|milk )/.test(desc)) score += 30;
     // Prefer plain cow's milk over buttermilk / flavored / alt milks.
-    if (/^milk, whole, fluid/.test(desc) || /^milk, fluid, whole/.test(desc)) score += 50;
-    if (/milk, reduced fat, fluid|milk, lowfat, fluid|milk, nonfat, fluid/.test(desc)) score += 20;
+    if (/milk, whole, 3\.25%/.test(desc) || /^milk, whole\b/.test(desc)) score += 80;
+    if (/milk, reduced fat|milk, lowfat|milk, nonfat|milk, skim/.test(desc) && !/lowfat|reduced|nonfat|skim|1%|2%/.test(queryLower)) {
+      score -= 60;
+    }
+    if (/milk, reduced fat, fluid|milk, lowfat, fluid|milk, nonfat, fluid/.test(desc) && /1%|2%|lowfat|nonfat|skim|reduced/.test(queryLower)) {
+      score += 40;
+    }
     var altMilks = ["coconut", "almond", "oat", "rice", "soy", "goat", "human", "chocolate", "malted", "filled", "dry", "condensed", "evaporated"];
     for (var k = 0; k < altMilks.length; k++) {
       if (hasWord(desc, altMilks[k]) && !hasWord(queryLower, altMilks[k])) score -= 80;
