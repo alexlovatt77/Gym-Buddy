@@ -26,8 +26,10 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: "OPENAI_API_KEY is not set on Vercel." });
   }
 
-  var usdaKey = process.env.USDA_API_KEY || process.env.FDC_API_KEY || "DEMO_KEY";
-  var usingDemoUsda = !process.env.USDA_API_KEY && !process.env.FDC_API_KEY;
+  var rawUsdaKey = process.env.USDA_API_KEY || process.env.FDC_API_KEY || "";
+  var usingDemoUsda =
+    !rawUsdaKey || /REPLACE_WITH_YOUR_USDA_KEY/i.test(rawUsdaKey);
+  var usdaKey = usingDemoUsda ? "DEMO_KEY" : rawUsdaKey;
 
   var body = req.body || {};
   var description = typeof body.description === "string" ? body.description.trim() : "";
@@ -155,18 +157,18 @@ async function parseMealItems(description, hintLine) {
             "Return JSON only with keys: name (short meal title), " +
             "category (breakfast|lunch|dinner|snack|dessert), " +
             "items (array of {label, query, portion, grams, estimated}). " +
-            "label = human food name. query = plain USDA-style search terms " +
-            "(prefer simple whole foods: e.g. 'chicken breast meat only cooked skinless boneless', " +
-            "'butter salted', 'rice white long-grain cooked', 'egg whole cooked'). " +
+            "label = human food name. query = plain USDA-style search terms for the SAME food the user meant. " +
+            "Examples: milk → 'Milk, whole, fluid'; butter → 'Butter, salted'; " +
+            "chicken breast → 'chicken breast meat only cooked skinless boneless'; " +
+            "rice → 'rice white long-grain cooked'; egg → 'egg whole cooked'. " +
+            "Do not turn milk into cheese, ricotta, yogurt, cream, or flavored milk unless the user said that. " +
             "Avoid brand/recipe/breaded/fried/lunchmeat unless the user said that. " +
-            "portion = short copy of what the user said (e.g. '4 skinless boneless chicken breasts', '2 servings butter'). " +
+            "portion = short copy of what the user said (e.g. '2 servings of milk', '4 chicken breasts'). " +
             "grams = TOTAL grams for that line after converting portions to weight. " +
-            "Rough estimates are expected and encouraged: " +
-            "servings, pieces, breasts, thighs, eggs, slices, handfuls, scoops, cups, tbsp, tsp, oz. " +
-            "Use typical edible cooked weights when the user gives counts " +
-            "(e.g. 1 medium skinless boneless chicken breast ≈ 170g cooked; " +
-            "1 large egg ≈ 50g; 1 serving butter ≈ 14g / 1 tbsp; 1 slice bread ≈ 28g). " +
-            "estimated=true when grams came from a typical portion rather than an exact weight the user gave. " +
+            "Rough estimates are expected: servings, pieces, breasts, eggs, slices, cups, tbsp, tsp, oz. " +
+            "Typical portions: 1 serving / 1 cup milk ≈ 244g; 1 tbsp / 1 serving butter ≈ 14g; " +
+            "1 medium skinless boneless chicken breast ≈ 170g cooked; 1 large egg ≈ 50g; 1 slice bread ≈ 28g. " +
+            "estimated=true when grams came from a typical portion rather than an exact weight. " +
             "estimated=false only if the user gave an exact mass (g, kg, oz, lb). " +
             "If they name a food with no usable portion at all, set grams: 0. " +
             "Do not invent nutrition numbers. Do not include markdown or extra keys.",
@@ -222,14 +224,15 @@ async function parseMealItems(description, hintLine) {
 }
 
 async function lookupUsdaFood(apiKey, query) {
+  var searchQuery = normalizeUsdaQuery(query);
   var searchRes = await fetch(
     "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=" + encodeURIComponent(apiKey),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        query: query,
-        pageSize: 25,
+        query: searchQuery,
+        pageSize: 40,
         dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
       }),
     }
@@ -245,7 +248,7 @@ async function lookupUsdaFood(apiKey, query) {
   var foods = Array.isArray(searchData.foods) ? searchData.foods : [];
   var best = null;
   var bestScore = -Infinity;
-  var q = String(query || "").toLowerCase();
+  var q = String(searchQuery || query || "").toLowerCase();
 
   for (var i = 0; i < foods.length; i++) {
     var food = foods[i];
@@ -264,18 +267,60 @@ async function lookupUsdaFood(apiKey, query) {
   return best;
 }
 
+function normalizeUsdaQuery(query) {
+  var q = String(query || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Keep common drinks/foods from drifting into related products (e.g. milk → ricotta).
+  if (
+    /^(milk|whole milk|milk whole|2% milk|1% milk|skim milk|fat free milk)(\s|,|$)/.test(q) ||
+    q === "milk fluid whole" ||
+    q === "milk, whole, fluid"
+  ) {
+    if (/\b(skim|fat free|nonfat|non fat)\b/.test(q)) return "Milk, nonfat, fluid";
+    if (/\b(1%|1 percent|lowfat|low fat)\b/.test(q)) return "Milk, lowfat, fluid, 1%";
+    if (/\b(2%|2 percent|reduced fat)\b/.test(q)) return "Milk, reduced fat, fluid, 2%";
+    return "Milk, whole, fluid";
+  }
+  if (/^butter\b/.test(q) && q.indexOf("butter milk") === -1 && q.indexOf("buttermilk") === -1) {
+    return "Butter, salted";
+  }
+  return query;
+}
+
+function hasWord(text, word) {
+  return new RegExp("(^|[^a-z0-9])" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-z0-9]|$)", "i").test(
+    text
+  );
+}
+
 function scoreUsdaFood(food, queryLower) {
   var desc = String(food.description || "").toLowerCase();
   var dataType = String(food.dataType || "");
   var score = 0;
 
-  if (dataType === "Foundation") score += 40;
-  else if (dataType === "SR Legacy") score += 30;
-  else if (dataType.indexOf("Survey") !== -1) score += 10;
+  if (dataType === "Foundation") score += 25;
+  else if (dataType === "SR Legacy") score += 35;
+  else if (dataType.indexOf("Survey") !== -1) score += 20;
 
-  var tokens = queryLower.split(/[^a-z0-9]+/).filter(Boolean);
+  var tokens = queryLower.split(/[^a-z0-9]+/).filter(function (t) {
+    return t && t.length > 1 && ["and", "with", "the", "only"].indexOf(t) === -1;
+  });
   for (var i = 0; i < tokens.length; i++) {
-    if (desc.indexOf(tokens[i]) !== -1) score += 8;
+    if (hasWord(desc, tokens[i])) score += 10;
+  }
+
+  // Prefer descriptions that start with the main food word.
+  var main = tokens[0] || "";
+  if (main && (desc.indexOf(main + ",") === 0 || desc.indexOf(main + " ") === 0)) {
+    score += 40;
+  } else if (main && hasWord(desc, main)) {
+    score += 5;
+  } else if (main) {
+    score -= 40;
   }
 
   var junk = [
@@ -293,11 +338,42 @@ function scoreUsdaFood(food, queryLower) {
     "babyfood",
     "baby food",
     "imitation",
+    "dessert",
+    "frozen",
+    "powder",
+    "protein supplement",
+    "crackers",
+    "cracker",
   ];
   for (var j = 0; j < junk.length; j++) {
     if (desc.indexOf(junk[j]) !== -1 && queryLower.indexOf(junk[j]) === -1) {
       score -= 50;
     }
+  }
+
+  // Milk must stay milk — not cheese made from milk.
+  if (hasWord(queryLower, "milk") && !hasWord(queryLower, "cheese") && !hasWord(queryLower, "ricotta")) {
+    if (
+      hasWord(desc, "cheese") ||
+      hasWord(desc, "ricotta") ||
+      hasWord(desc, "yogurt") ||
+      hasWord(desc, "yoghurt") ||
+      hasWord(desc, "ice cream") ||
+      (hasWord(desc, "cream") && !/\bcream\b/.test(queryLower))
+    ) {
+      score -= 120;
+    }
+    if (hasWord(desc, "fluid")) score += 25;
+    if (/^(milk,|milk )/.test(desc)) score += 30;
+    var altMilks = ["coconut", "almond", "oat", "rice", "soy", "goat", "human", "chocolate", "malted"];
+    for (var k = 0; k < altMilks.length; k++) {
+      if (hasWord(desc, altMilks[k]) && !hasWord(queryLower, altMilks[k])) score -= 80;
+    }
+  }
+
+  // Butter should not become buttermilk unless asked.
+  if (hasWord(queryLower, "butter") && !hasWord(queryLower, "buttermilk")) {
+    if (hasWord(desc, "buttermilk")) score -= 100;
   }
 
   if (desc.indexOf("meat only") !== -1) score += 12;
@@ -307,7 +383,7 @@ function scoreUsdaFood(food, queryLower) {
 
   var nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
   var hasEnergy = nutrients.some(function (n) {
-    var id = Number(n && (n.nutrientId || n.nutrientNumber) || 0);
+    var id = Number((n && (n.nutrientId || n.nutrientNumber)) || 0);
     var unit = String((n && n.unitName) || "").toUpperCase();
     return id === 1008 || unit === "KCAL";
   });
