@@ -123,8 +123,13 @@
     var category = document.getElementById("ai-meal-category");
     var btn = document.getElementById("ai-meal-estimate");
     var description = input ? String(input.value || "").trim() : "";
+    var categoryValue = category ? String(category.value || "").trim() : "";
     if (!description) {
       setStatus("Describe what you ate — portions like “2 servings” are fine.", true);
+      return;
+    }
+    if (!categoryValue) {
+      setStatus("Pick a category first.", true);
       return;
     }
 
@@ -141,7 +146,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: description,
-          category: category ? category.value : "",
+          category: categoryValue,
         }),
       });
       var data = await res.json().catch(function () {

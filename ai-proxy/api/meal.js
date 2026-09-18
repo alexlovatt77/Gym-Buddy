@@ -44,13 +44,12 @@ module.exports = async function handler(req, res) {
   }
 
   var allowedCategories = ["breakfast", "lunch", "dinner", "snack", "dessert"];
-  var hintLine =
-    allowedCategories.indexOf(categoryHint) !== -1
-      ? "Preferred category: " + categoryHint + "."
-      : "Pick the best category.";
+  if (allowedCategories.indexOf(categoryHint) === -1) {
+    return res.status(400).json({ error: "Pick a category." });
+  }
 
   try {
-    var parsed = await parseMealItems(description, hintLine);
+    var parsed = await parseMealItems(description, categoryHint);
     if (!parsed || !Array.isArray(parsed.items) || !parsed.items.length) {
       return res.status(400).json({
         error:
@@ -129,8 +128,7 @@ module.exports = async function handler(req, res) {
       { calories: 0, protein: 0, fat: 0, carbs: 0 }
     );
 
-    var category = String(parsed.category || categoryHint || "snack").toLowerCase();
-    if (allowedCategories.indexOf(category) === -1) category = "snack";
+    var category = categoryHint;
 
     var meal = {
       name: String(parsed.name || description).trim().slice(0, 80) || "Meal",
@@ -194,7 +192,7 @@ async function openaiJson(messages, model) {
   }
 }
 
-async function parseMealItems(description, hintLine) {
+async function parseMealItems(description, category) {
   var parsed = await openaiJson(
     [
       {
@@ -207,8 +205,8 @@ async function parseMealItems(description, hintLine) {
           "'chicken breast' means plain chicken breast, not breaded tenders. " +
           "Use common sense about what they almost certainly meant. " +
           "Return JSON only with keys: name (short meal title), " +
-          "category (breakfast|lunch|dinner|snack|dessert), " +
           "items (array of {label, query, portion, grams, estimated}). " +
+          "Do not choose or return a category — the user already set it. " +
           "label = plain food name. " +
           "query = best USDA FoodData search string for THAT exact food " +
           "(include form cues like fluid/cooked/raw/skinless when helpful). " +
@@ -224,7 +222,11 @@ async function parseMealItems(description, hintLine) {
       },
       {
         role: "user",
-        content: hintLine + "\nMeal description:\n" + description,
+        content:
+          "Category (already chosen by user, do not change): " +
+          category +
+          "\nMeal description:\n" +
+          description,
       },
     ],
     "gpt-4.1"
