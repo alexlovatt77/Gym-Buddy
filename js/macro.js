@@ -772,5 +772,43 @@
   });
   }
 
+  window.studioLogAiMeal = function (meal) {
+    if (!meal || typeof meal !== "object") return null;
+    var store = loadStore();
+    var date = selectedDateISO();
+    if (!store.logs[date]) store.logs[date] = [];
+    ensureTodayGoals(store);
+    var entryId = uid("e");
+    var entry = {
+      id: entryId,
+      mealId: null,
+      category: meal.category || "snack",
+      name: String(meal.name || "Meal").trim() || "Meal",
+      calories: Math.max(0, Math.round(Number(meal.calories) || 0)),
+      protein: Math.max(0, Math.round(Number(meal.protein) || 0)),
+      fat: Math.max(0, Math.round(Number(meal.fat) || 0)),
+      carbs: Math.max(0, Math.round(Number(meal.carbs) || 0)),
+      loggedAt: Date.now(),
+      source: "ai",
+    };
+    store.logs[date].push(entry);
+    saveStore(store);
+    refresh();
+    if (window.studioUndo) {
+      window.studioUndo.offer({
+        message: "Meal added",
+        onUndo: function () {
+          var s = loadStore();
+          s.logs[date] = dayEntries(s, date).filter(function (item) {
+            return item.id !== entryId;
+          });
+          saveStore(s);
+          refresh();
+        },
+      });
+    }
+    return entry;
+  };
+
   refresh();
 })();

@@ -1236,6 +1236,60 @@ a:hover {
   background: var(--paper);
 }
 
+.ai-meal {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.ai-meal textarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.65rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.ai-meal textarea:focus {
+  outline: none;
+  border-color: var(--fjord);
+}
+
+.ai-meal-preview {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.ai-meal-preview__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.ai-meal-preview__meta {
+  margin: 0 0 var(--space-4);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+[data-theme="fallout"] .ai-meal textarea,
+[data-theme="fallout"] .ai-meal-preview {
+  border-radius: 0;
+  background: #061008;
+  border-color: var(--line-strong);
+  font-family: "Share Tech Mono", monospace;
+}
+
 [data-theme="fallout"] .coach-reply {
   border-radius: 0;
   border-color: var(--line-strong);

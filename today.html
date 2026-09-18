@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=17" />
+    <link rel="stylesheet" href="css/styles.css?v=18" />
   </head>
   <body>
     <div class="app">
@@ -58,14 +58,40 @@
           <p class="field-status" id="finish-msg" hidden></p>
           <div class="btn-row btn-row--spaced">
             <button class="btn" type="button" id="finish-workout" disabled>Finish workout</button>
-            <button class="btn btn--ghost" type="button" id="ask-coach">Ask coach</button>
           </div>
-          <p class="field-status" id="coach-status" hidden></p>
-          <div class="coach-reply" id="coach-reply" hidden></div>
         </section>
 
         <section class="section" aria-labelledby="log-macro">
           <h2 class="section__title" id="log-macro">Log a meal</h2>
+
+          <div class="ai-meal">
+            <div class="field">
+              <label for="ai-meal-input">Describe what you ate</label>
+              <textarea
+                id="ai-meal-input"
+                rows="3"
+                placeholder="e.g. 2 eggs, toast with butter, and a banana"
+              ></textarea>
+            </div>
+            <div class="field">
+              <label for="ai-meal-category">Category (optional)</label>
+              <select id="ai-meal-category">
+                <option value="">Let AI choose</option>
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+                <option value="dessert">Dessert</option>
+              </select>
+            </div>
+            <div class="btn-row">
+              <button class="btn" type="button" id="ai-meal-estimate">Estimate macros</button>
+            </div>
+            <p class="field-status" id="ai-meal-status" hidden></p>
+            <div class="ai-meal-preview" id="ai-meal-preview" hidden></div>
+          </div>
+
+          <p class="section__note">Or pick from your saved meals:</p>
 
           <form class="entry" id="log-form">
             <div class="field">
@@ -204,8 +230,8 @@
     <script src="js/exercise-library.js?v=5"></script>
     <script src="js/meals-defaults.js?v=3"></script>
     <script src="js/workout.js?v=11"></script>
-    <script src="js/ai-coach.js?v=2"></script>
     <script src="js/weight.js?v=2"></script>
-    <script src="js/macro.js?v=4"></script>
+    <script src="js/macro.js?v=5"></script>
+    <script src="js/ai-meal.js?v=1"></script>
   </body>
 </html>
