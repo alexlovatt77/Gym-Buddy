@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=16" />
+    <link rel="stylesheet" href="css/styles.css?v=17" />
   </head>
   <body>
     <div class="app">
@@ -58,7 +58,10 @@
           <p class="field-status" id="finish-msg" hidden></p>
           <div class="btn-row btn-row--spaced">
             <button class="btn" type="button" id="finish-workout" disabled>Finish workout</button>
+            <button class="btn btn--ghost" type="button" id="ask-coach">Ask coach</button>
           </div>
+          <p class="field-status" id="coach-status" hidden></p>
+          <div class="coach-reply" id="coach-reply" hidden></div>
         </section>
 
         <section class="section" aria-labelledby="log-macro">
@@ -201,6 +204,7 @@
     <script src="js/exercise-library.js?v=5"></script>
     <script src="js/meals-defaults.js?v=3"></script>
     <script src="js/workout.js?v=11"></script>
+    <script src="js/ai-coach.js?v=1"></script>
     <script src="js/weight.js?v=2"></script>
     <script src="js/macro.js?v=4"></script>
   </body>

@@ -1223,6 +1223,27 @@ a:hover {
   margin: 0;
 }
 
+.coach-reply {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+[data-theme="fallout"] .coach-reply {
+  border-radius: 0;
+  border-color: var(--line-strong);
+  background: #061008;
+  color: var(--ink);
+  font-family: "Share Tech Mono", monospace;
+}
+
 .session-empty {
   margin: 0;
   padding: var(--space-5) 0;
