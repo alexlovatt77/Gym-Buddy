@@ -122,6 +122,8 @@
       var message = err && err.message ? err.message : "Could not reach coach.";
       if (/OPENAI_API_KEY/i.test(message)) {
         message = "Add OPENAI_API_KEY in your Vercel project settings, then redeploy.";
+      } else if (/no credits remaining|billing|insufficient/i.test(message)) {
+        message = "OpenAI account has no credits. Add billing/credits at platform.openai.com.";
       }
       setCoachStatus(message, true);
     } finally {
