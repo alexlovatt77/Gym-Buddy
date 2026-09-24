@@ -847,7 +847,7 @@
   };
 
   window.studioDayMacroTotals = function () {
-    return dayTotals(loadStore(), selectedDateISO());
+    return sumDay(dayEntries(loadStore(), selectedDateISO()));
   };
 
   refresh();
