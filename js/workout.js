@@ -248,6 +248,98 @@
     return Array.isArray(list) && list.length ? list : [];
   }
 
+  function exerciseHistory(store, exerciseName, limit) {
+    var lower = String(exerciseName || "").toLowerCase();
+    if (!lower) return [];
+    var max = limit || 5;
+    var sessions = [];
+    var dates = Object.keys(store.days || {}).sort().reverse();
+    for (var i = 0; i < dates.length; i++) {
+      var date = dates[i];
+      var exercises = Array.isArray(store.days[date]) ? store.days[date] : [];
+      for (var j = 0; j < exercises.length; j++) {
+        var ex = exercises[j];
+        if (!ex || String(ex.name || "").toLowerCase() !== lower) continue;
+        var sets = Array.isArray(ex.sets) ? ex.sets : [];
+        if (!sets.length) continue;
+        sessions.push({ date: date, sets: sets });
+        break;
+      }
+      if (sessions.length >= max) break;
+    }
+    return sessions;
+  }
+
+  function openExerciseHistory(exerciseName) {
+    var historySheet = document.getElementById("exercise-history-sheet");
+    var list = document.getElementById("exercise-history-list");
+    var title = document.getElementById("exercise-history-title");
+    var subtitle = document.getElementById("exercise-history-subtitle");
+    if (!historySheet || !list || !title) return;
+
+    var name = String(exerciseName || "").trim();
+    title.textContent = name || "History";
+    if (subtitle) subtitle.textContent = "Last 5 finished sessions";
+
+    var sessions = exerciseHistory(loadStore(), name, 5);
+    if (!sessions.length) {
+      list.innerHTML =
+        '<p class="session-empty">No past sessions for this exercise yet.</p>';
+    } else {
+      list.innerHTML = sessions
+        .map(function (session) {
+          var count = session.sets.length;
+          return (
+            '<article class="exercise-history__session">' +
+            '<div class="exercise-history__top">' +
+            '<h3 class="exercise-history__date">' +
+            escapeHtml(formatDateFull(session.date)) +
+            "</h3>" +
+            '<p class="exercise-history__count">' +
+            count +
+            " set" +
+            (count === 1 ? "" : "s") +
+            "</p>" +
+            "</div>" +
+            '<p class="exercise-history__sets">' +
+            escapeHtml(setSummaryLine(session.sets)) +
+            "</p>" +
+            '<ul class="exercise-history__detail">' +
+            session.sets
+              .map(function (set, index) {
+                return (
+                  "<li>Set " +
+                  (index + 1) +
+                  ": " +
+                  escapeHtml(String(set.reps)) +
+                  " × " +
+                  escapeHtml(formatSetWeight(set)) +
+                  "</li>"
+                );
+              })
+              .join("") +
+            "</ul>" +
+            "</article>"
+          );
+        })
+        .join("");
+    }
+
+    historySheet.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeExerciseHistory() {
+    var historySheet = document.getElementById("exercise-history-sheet");
+    if (!historySheet) return;
+    historySheet.hidden = true;
+    if (sheet && !sheet.hidden) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }
+
   function dayHasFinishedWorkout(store, date) {
     return finishedExercises(store, date).length > 0;
   }
@@ -837,11 +929,29 @@
     }
 
     if (exercisePicker) {
+      var lastExerciseTap = { name: "", at: 0 };
       exercisePicker.addEventListener("click", function (event) {
         var button = event.target.closest("[data-exercise]");
         if (!button) return;
+        var name = button.getAttribute("data-exercise") || "";
+        var now = Date.now();
+        var isDouble =
+          name &&
+          name === lastExerciseTap.name &&
+          now - lastExerciseTap.at < 380;
+        lastExerciseTap = { name: name, at: now };
         loadModeTouched = false;
-        setSelectedExercise(button.getAttribute("data-exercise"));
+        setSelectedExercise(name);
+        if (isDouble) {
+          openExerciseHistory(name);
+        }
+      });
+    }
+
+    var historySheetEl = document.getElementById("exercise-history-sheet");
+    if (historySheetEl) {
+      historySheetEl.addEventListener("click", function (event) {
+        if (event.target.closest("[data-close-history]")) closeExerciseHistory();
       });
     }
 
@@ -860,7 +970,13 @@
     }
 
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && sheet && !sheet.hidden) closeSheet();
+      if (event.key !== "Escape") return;
+      var historySheet = document.getElementById("exercise-history-sheet");
+      if (historySheet && !historySheet.hidden) {
+        closeExerciseHistory();
+        return;
+      }
+      if (sheet && !sheet.hidden) closeSheet();
     });
 
     listEl.addEventListener("click", function (event) {

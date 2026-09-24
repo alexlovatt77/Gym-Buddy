@@ -10,7 +10,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=24" />
+    <link rel="stylesheet" href="css/styles.css?v=25" />
   </head>
   <body>
     <div class="app">
@@ -231,6 +231,27 @@
         </div>
       </div>
 
+      <div class="sheet" id="exercise-history-sheet" hidden>
+        <div class="sheet__backdrop" data-close-history tabindex="-1"></div>
+        <div
+          class="sheet__panel sheet__panel--exercise-history"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="exercise-history-title"
+        >
+          <div class="sheet__header">
+            <div>
+              <h2 class="sheet__title" id="exercise-history-title">History</h2>
+              <p class="sheet__subtitle" id="exercise-history-subtitle">Last 5 sessions</p>
+            </div>
+            <button class="sheet__close" type="button" data-close-history aria-label="Close">
+              Close
+            </button>
+          </div>
+          <div id="exercise-history-list" class="exercise-history"></div>
+        </div>
+      </div>
+
       <nav class="tabbar" aria-label="Primary">
         <a href="today.html"><span class="tabbar__word">Day</span></a>
         <a href="sets-per-week.html"><span class="tabbar__word">Week</span></a>
@@ -246,7 +267,7 @@
     <script src="js/undo.js?v=2"></script>
     <script src="js/exercise-library.js?v=6"></script>
     <script src="js/meals-defaults.js?v=3"></script>
-    <script src="js/workout.js?v=11"></script>
+    <script src="js/workout.js?v=13"></script>
     <script src="js/weight.js?v=2"></script>
     <script src="js/macro.js?v=6"></script>
     <script src="js/ai-meal.js?v=9"></script>

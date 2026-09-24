@@ -1780,9 +1780,85 @@ a:hover {
   color: var(--ink);
 }
 
-.sheet__panel--week-detail {
-  max-height: min(92vh, 52rem);
-  overflow: auto;
+.sheet__panel--exercise-history {
+  top: 18vh;
+}
+
+#exercise-history-sheet {
+  z-index: 45;
+}
+
+.exercise-history {
+  display: grid;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.exercise-history__session {
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.exercise-history__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.exercise-history__date {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.exercise-history__count {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.exercise-history__sets {
+  margin: var(--space-2) 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.exercise-history__detail {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.exercise-picker__item {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+[data-theme="fallout"] .exercise-history__session {
+  border-radius: 0;
+  background: #061008;
+  border-color: var(--line-strong);
+}
+
+[data-theme="fallout"] .exercise-history__date {
+  font-family: "Share Tech Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .week-cal {
