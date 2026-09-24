@@ -301,9 +301,6 @@
             (count === 1 ? "" : "s") +
             "</p>" +
             "</div>" +
-            '<p class="exercise-history__sets">' +
-            escapeHtml(setSummaryLine(session.sets)) +
-            "</p>" +
             '<ul class="exercise-history__detail">' +
             session.sets
               .map(function (set, index) {
