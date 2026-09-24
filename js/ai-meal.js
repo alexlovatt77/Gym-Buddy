@@ -41,16 +41,22 @@
             var portionBit = item.portion
               ? escapeHtml(item.portion)
               : escapeHtml(item.label || "");
+            var note = item.matched
+              ? escapeHtml(item.matched)
+              : escapeHtml(item.label || "");
+            var gramsBit =
+              item.grams > 0
+                ? ' <span class="ai-meal-preview__grams">≈ ' + item.grams + "g</span>"
+                : "";
             return (
               '<li class="ai-meal-preview__item">' +
               '<div class="ai-meal-preview__item-main">' +
               '<p class="ai-meal-preview__item-portion">' +
               portionBit +
-              ' <span class="ai-meal-preview__grams">≈ ' +
-              item.grams +
-              "g</span></p>" +
+              gramsBit +
+              "</p>" +
               '<p class="ai-meal-preview__item-match">' +
-              escapeHtml(item.matched || "") +
+              note +
               "</p>" +
               "</div>" +
               '<div class="ai-meal-preview__item-macros">' +
@@ -78,9 +84,7 @@
     preview.innerHTML =
       '<div class="ai-meal-preview__head">' +
       '<div class="ai-meal-preview__identity">' +
-      '<p class="ai-meal-preview__eyebrow">Review before adding' +
-      (meal.source === "usda" ? " · USDA" : "") +
-      "</p>" +
+      '<p class="ai-meal-preview__eyebrow">Review before adding</p>' +
       '<h3 class="ai-meal-preview__title">' +
       escapeHtml(meal.name) +
       "</h3>" +
@@ -118,7 +122,7 @@
       .replace(/"/g, "&quot;");
   }
 
-  async function lookupMeal() {
+  async function estimateMeal() {
     var input = document.getElementById("ai-meal-input");
     var category = document.getElementById("ai-meal-category");
     var btn = document.getElementById("ai-meal-estimate");
@@ -135,9 +139,9 @@
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Looking up…";
+      btn.textContent = "Estimating…";
     }
-    setStatus("Looking up USDA macros…");
+    setStatus("Estimating macros…");
     showPreview(null);
 
     try {
@@ -153,22 +157,15 @@
         return {};
       });
       if (!res.ok) {
-        throw new Error(data.error || "Lookup failed.");
+        throw new Error(data.error || "Estimate failed.");
       }
       if (!data.meal) throw new Error("No meal data returned.");
-      setStatus(
-        data.meal.usdaDemo
-          ? "Review the matches below, then add. Tip: add your own USDA_API_KEY in Vercel for reliability."
-          : "Review the matches below, then add to today’s log."
-      );
+      setStatus("Check the estimate, then add it to today’s log.");
       showPreview(data.meal);
     } catch (err) {
-      var message = err && err.message ? err.message : "Could not look up meal.";
+      var message = err && err.message ? err.message : "Could not estimate meal.";
       if (/OPENAI_API_KEY/i.test(message)) {
         message = "Add OPENAI_API_KEY in Vercel, then redeploy.";
-      } else if (/USDA_API_KEY|FDC_API_KEY/i.test(message)) {
-        message =
-          "Add USDA_API_KEY in Vercel (free at fdc.nal.usda.gov/api-key-signup.html), then Redeploy.";
       } else if (/no credits remaining|billing|insufficient/i.test(message)) {
         message = "OpenAI account has no credits. Add billing at platform.openai.com.";
       }
@@ -176,7 +173,7 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Look up macros";
+        btn.textContent = "Estimate macros";
       }
     }
   }
@@ -199,7 +196,7 @@
     var estimateBtn = document.getElementById("ai-meal-estimate");
     if (estimateBtn) {
       estimateBtn.addEventListener("click", function () {
-        lookupMeal();
+        estimateMeal();
       });
     }
 
