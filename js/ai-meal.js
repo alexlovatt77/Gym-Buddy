@@ -21,6 +21,12 @@
       });
   }
 
+  function actionLabel(type) {
+    if (type === "set_day") return "Set day totals";
+    if (type === "add_macros") return "Add macros";
+    return "Add meal";
+  }
+
   function showPreview(meal) {
     var preview = document.getElementById("ai-meal-preview");
     if (!preview) return;
@@ -32,6 +38,7 @@
     }
     pendingMeal = meal;
 
+    var type = meal.type || "add_meal";
     var itemsHtml = "";
     if (Array.isArray(meal.items) && meal.items.length) {
       itemsHtml =
@@ -80,16 +87,32 @@
         "</ul>";
     }
 
+    var summary =
+      meal.summary ||
+      (type === "set_day"
+        ? "Replace today’s meal log with these totals."
+        : type === "add_macros"
+          ? "Add these macros to today."
+          : "Add this meal to today.");
+
+    var confirmLabel =
+      type === "set_day" ? "Update day" : type === "add_macros" ? "Add macros" : "Add to day";
+
     preview.hidden = false;
     preview.innerHTML =
       '<div class="ai-meal-preview__head">' +
       '<div class="ai-meal-preview__identity">' +
-      '<p class="ai-meal-preview__eyebrow">Review before adding</p>' +
+      '<p class="ai-meal-preview__eyebrow">' +
+      escapeHtml(actionLabel(type)) +
+      " · review</p>" +
       '<h3 class="ai-meal-preview__title">' +
       escapeHtml(meal.name) +
       "</h3>" +
       '<p class="ai-meal-preview__meta">' +
       escapeHtml(titleCase(meal.category)) +
+      "</p>" +
+      '<p class="ai-meal-preview__summary">' +
+      escapeHtml(summary) +
       "</p>" +
       "</div>" +
       '<div class="ai-meal-preview__totals" aria-label="Macro totals">' +
@@ -109,7 +132,9 @@
       "</div>" +
       itemsHtml +
       '<div class="ai-meal-preview__actions">' +
-      '<button class="btn" type="button" id="ai-meal-confirm">Add to day</button>' +
+      '<button class="btn" type="button" id="ai-meal-confirm">' +
+      escapeHtml(confirmLabel) +
+      "</button>" +
       '<button class="btn btn--ghost" type="button" id="ai-meal-cancel">Cancel</button>' +
       "</div>";
   }
@@ -129,20 +154,19 @@
     var description = input ? String(input.value || "").trim() : "";
     var categoryValue = category ? String(category.value || "").trim() : "";
     if (!description) {
-      setStatus("Describe what you ate — portions like “2 servings” are fine.", true);
-      return;
-    }
-    if (!categoryValue) {
-      setStatus("Pick a category first.", true);
+      setStatus("Describe food, or give day totals like 2500 cal / 180p / 70f / 200c.", true);
       return;
     }
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Estimating…";
+      btn.textContent = "Working…";
     }
-    setStatus("Estimating macros…");
+    setStatus("Reading that…");
     showPreview(null);
+
+    var current =
+      typeof window.studioDayMacroTotals === "function" ? window.studioDayMacroTotals() : null;
 
     try {
       var res = await fetch(MEAL_URL, {
@@ -151,19 +175,23 @@
         body: JSON.stringify({
           description: description,
           category: categoryValue,
+          current: current,
         }),
       });
       var data = await res.json().catch(function () {
         return {};
       });
       if (!res.ok) {
-        throw new Error(data.error || "Estimate failed.");
+        if (data.needCategory) {
+          throw new Error("Pick a category for this meal.");
+        }
+        throw new Error(data.error || "Could not process that.");
       }
-      if (!data.meal) throw new Error("No meal data returned.");
-      setStatus("Check the estimate, then add it to today’s log.");
+      if (!data.meal) throw new Error("No food data returned.");
+      setStatus("Check the preview, then confirm.");
       showPreview(data.meal);
     } catch (err) {
-      var message = err && err.message ? err.message : "Could not estimate meal.";
+      var message = err && err.message ? err.message : "Could not process that.";
       if (/OPENAI_API_KEY/i.test(message)) {
         message = "Add OPENAI_API_KEY in Vercel, then redeploy.";
       } else if (/no credits remaining|billing|insufficient/i.test(message)) {
@@ -173,23 +201,37 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Estimate macros";
+        btn.textContent = "Update log";
       }
     }
   }
 
   function confirmMeal() {
     if (!pendingMeal) return;
-    if (typeof window.studioLogAiMeal !== "function") {
-      setStatus("Meal log is not ready on this page.", true);
-      return;
+    var type = pendingMeal.type || "add_meal";
+
+    if (type === "set_day") {
+      if (typeof window.studioSetDayMacros !== "function") {
+        setStatus("Macro log is not ready on this page.", true);
+        return;
+      }
+      window.studioSetDayMacros(pendingMeal);
+      if (window.studioToast) window.studioToast.show("Day macros updated");
+    } else {
+      if (typeof window.studioLogAiMeal !== "function") {
+        setStatus("Meal log is not ready on this page.", true);
+        return;
+      }
+      window.studioLogAiMeal(pendingMeal);
+      if (window.studioToast) {
+        window.studioToast.show(type === "add_macros" ? "Macros added" : "Meal added");
+      }
     }
-    window.studioLogAiMeal(pendingMeal);
+
     var input = document.getElementById("ai-meal-input");
     if (input) input.value = "";
     showPreview(null);
     setStatus("");
-    if (window.studioToast) window.studioToast.show("Meal added");
   }
 
   document.addEventListener("DOMContentLoaded", function () {

@@ -10,7 +10,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Day — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=23" />
+    <link rel="stylesheet" href="css/styles.css?v=24" />
   </head>
   <body>
     <div class="app">
@@ -65,25 +65,27 @@
         </section>
 
         <section class="section" aria-labelledby="log-macro">
-          <h2 class="section__title" id="log-macro">Log a meal</h2>
-          <p class="section__note">Describe what you ate in plain language. We’ll estimate the macros for you to confirm.</p>
+          <h2 class="section__title" id="log-macro">Food log</h2>
+          <p class="section__note">
+            Describe a meal, or give day totals (e.g. 2500 cal, 180p, 70f, 200c). Confirm before anything is saved.
+          </p>
 
           <div class="ai-meal">
             <div class="ai-meal__composer">
               <div class="field ai-meal__describe">
-                <label for="ai-meal-input">What you ate</label>
+                <label for="ai-meal-input">What to log</label>
                 <textarea
                   id="ai-meal-input"
                   rows="4"
-                  placeholder="e.g. 4 skinless boneless chicken breasts, 2 servings of butter"
+                  placeholder="e.g. 4 chicken breasts and rice — or — today 2500 cal / 180 protein / 70 fat / 200 carbs"
                 ></textarea>
               </div>
 
               <div class="ai-meal__tools">
                 <div class="field ai-meal__category">
                   <label for="ai-meal-category">Category</label>
-                  <select id="ai-meal-category" required>
-                    <option value="">Select…</option>
+                  <select id="ai-meal-category">
+                    <option value="">Optional</option>
                     <option value="breakfast">Breakfast</option>
                     <option value="lunch">Lunch</option>
                     <option value="dinner">Dinner</option>
@@ -93,7 +95,7 @@
                 </div>
                 <div class="ai-meal__action">
                   <button class="btn ai-meal__submit" type="button" id="ai-meal-estimate">
-                    Estimate macros
+                    Update log
                   </button>
                 </div>
               </div>
@@ -246,7 +248,7 @@
     <script src="js/meals-defaults.js?v=3"></script>
     <script src="js/workout.js?v=11"></script>
     <script src="js/weight.js?v=2"></script>
-    <script src="js/macro.js?v=5"></script>
-    <script src="js/ai-meal.js?v=8"></script>
+    <script src="js/macro.js?v=6"></script>
+    <script src="js/ai-meal.js?v=9"></script>
   </body>
 </html>

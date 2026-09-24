@@ -810,5 +810,45 @@
     return entry;
   };
 
+  window.studioSetDayMacros = function (meal) {
+    if (!meal || typeof meal !== "object") return null;
+    var store = loadStore();
+    var date = selectedDateISO();
+    ensureTodayGoals(store);
+    var previous = dayEntries(store, date).slice();
+    var entryId = uid("e");
+    var entry = {
+      id: entryId,
+      mealId: null,
+      category: meal.category || "snack",
+      name: String(meal.name || "Day totals").trim() || "Day totals",
+      calories: Math.max(0, Math.round(Number(meal.calories) || 0)),
+      protein: Math.max(0, Math.round(Number(meal.protein) || 0)),
+      fat: Math.max(0, Math.round(Number(meal.fat) || 0)),
+      carbs: Math.max(0, Math.round(Number(meal.carbs) || 0)),
+      loggedAt: Date.now(),
+      source: "ai-day",
+    };
+    store.logs[date] = [entry];
+    saveStore(store);
+    refresh();
+    if (window.studioUndo) {
+      window.studioUndo.offer({
+        message: "Day macros updated",
+        onUndo: function () {
+          var s = loadStore();
+          s.logs[date] = previous;
+          saveStore(s);
+          refresh();
+        },
+      });
+    }
+    return entry;
+  };
+
+  window.studioDayMacroTotals = function () {
+    return dayTotals(loadStore(), selectedDateISO());
+  };
+
   refresh();
 })();

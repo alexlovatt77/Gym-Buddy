@@ -30,17 +30,28 @@ module.exports = async function handler(req, res) {
   var description = typeof body.description === "string" ? body.description.trim() : "";
   var categoryHint =
     typeof body.category === "string" ? body.category.trim().toLowerCase() : "";
+  var current =
+    body.current && typeof body.current === "object"
+      ? {
+          calories: Math.max(0, Math.round(Number(body.current.calories) || 0)),
+          protein: Math.max(0, Math.round(Number(body.current.protein) || 0)),
+          fat: Math.max(0, Math.round(Number(body.current.fat) || 0)),
+          carbs: Math.max(0, Math.round(Number(body.current.carbs) || 0)),
+        }
+      : null;
 
   if (!description) {
-    return res.status(400).json({ error: "Describe what you ate (portions are fine)." });
+    return res.status(400).json({
+      error: "Tell me what you ate, or give today’s macros.",
+    });
   }
   if (description.length > 2000) {
     description = description.slice(0, 2000);
   }
 
   var allowedCategories = ["breakfast", "lunch", "dinner", "snack", "dessert"];
-  if (allowedCategories.indexOf(categoryHint) === -1) {
-    return res.status(400).json({ error: "Pick a category." });
+  if (categoryHint && allowedCategories.indexOf(categoryHint) === -1) {
+    categoryHint = "";
   }
 
   try {
@@ -58,29 +69,50 @@ module.exports = async function handler(req, res) {
           {
             role: "system",
             content:
-              "You are a careful personal nutrition coach logging one person's meals. " +
-              "Respond exactly like a sharp human coach would if they said what they ate in chat: " +
-              "use common sense, typical restaurant/home portions, and your nutrition knowledge. " +
-              "Do NOT call databases, USDA, barcodes, or brands unless the user named a brand. " +
-              "Interpret casually: 'milk' = drinking milk (assume whole if unspecified); " +
-              "'butter' = butter not buttermilk; 'chicken breast' = plain cooked breast not breaded. " +
-              "Rough portions are fine (servings, breasts, cups, handfuls). Convert them yourself. " +
+              "You are a careful personal nutrition coach for a food diary app. " +
+              "Read the user's message like a smart human coach would. " +
+              "Decide the intent:\n" +
+              '1) "add_meal" — they described food/drinks to log as a meal (estimate macros).\n' +
+              '2) "set_day" — they gave (or clearly meant) totals for the whole day ' +
+              "(e.g. 'today was 2500 cal, 180p, 70f, 200c', 'set my macros to...', " +
+              "'I hit 220g protein / 2800 calories'). " +
+              "Use the numbers they gave; do not invent missing macros — set missing ones to 0 " +
+              "only if they clearly omitted that macro on purpose, otherwise ask is not possible: " +
+              "if calories/protein/fat/carbs are incomplete for a set_day, still fill what you can " +
+              "and put 0 for unspecified macros.\n" +
+              '3) "add_macros" — they want to ADD a lump of macros (not replace the day), ' +
+              "e.g. 'add 500 calories and 40 protein'.\n" +
+              "Do NOT use USDA or external databases. Use common sense for food estimates. " +
               "Return JSON only with keys: " +
-              "name (short meal title), " +
-              "calories (integer kcal total), protein (integer g), fat (integer g), carbs (integer g), " +
+              "type (add_meal|set_day|add_macros), " +
+              "name (short title), " +
+              "category (breakfast|lunch|dinner|snack|dessert or empty string), " +
+              "calories, protein, fat, carbs (integers), " +
               "confidence (low|medium|high), " +
-              "items (array of {label, portion, grams, matched, calories, protein, fat, carbs}). " +
-              "For each item: portion echoes what they said; grams is your assumed edible weight; " +
-              "matched is a short plain-English food note (NOT a database id), e.g. 'whole milk, ~1 cup'. " +
-              "Item macros must sum approximately to the totals. " +
-              "Do not invent foods they did not mention. Do not return a category.",
+              "summary (one short sentence of what you will do), " +
+              "items (array; for add_meal use {label, portion, grams, matched, calories, protein, fat, carbs}; " +
+              "for set_day/add_macros use [] or a single explanatory item).\n" +
+              "For add_meal: estimate from foods; prefer the user's category if provided. " +
+              "For set_day: macros are the TARGET day totals. " +
+              "For add_macros: macros are the amount to ADD. " +
+              "Do not invent foods they did not mention.",
           },
           {
             role: "user",
             content:
-              "Category (already chosen by user, do not change): " +
-              categoryHint +
-              "\nWhat they ate:\n" +
+              (categoryHint ? "Preferred meal category: " + categoryHint + ".\n" : "") +
+              (current
+                ? "Current logged totals today: " +
+                  current.calories +
+                  " kcal, P " +
+                  current.protein +
+                  "g, F " +
+                  current.fat +
+                  "g, C " +
+                  current.carbs +
+                  "g.\n"
+                : "") +
+              "User message:\n" +
               description,
           },
         ],
@@ -107,7 +139,21 @@ module.exports = async function handler(req, res) {
     try {
       parsed = JSON.parse(raw);
     } catch (err) {
-      return res.status(500).json({ error: "Could not parse meal estimate." });
+      return res.status(500).json({ error: "Could not parse food response." });
+    }
+
+    var type = String(parsed.type || "add_meal").toLowerCase();
+    if (["add_meal", "set_day", "add_macros"].indexOf(type) === -1) type = "add_meal";
+
+    var category = String(parsed.category || categoryHint || "").toLowerCase();
+    if (allowedCategories.indexOf(category) === -1) {
+      category = type === "add_meal" ? categoryHint || "snack" : "snack";
+    }
+    if (type === "add_meal" && allowedCategories.indexOf(category) === -1) {
+      return res.status(400).json({
+        error: "Pick a category for this meal.",
+        needCategory: true,
+      });
     }
 
     var items = Array.isArray(parsed.items) ? parsed.items : [];
@@ -115,10 +161,14 @@ module.exports = async function handler(req, res) {
       .map(function (item) {
         return {
           label: String((item && item.label) || "").trim().slice(0, 80) || "Food",
-          portion: String((item && item.portion) || (item && item.label) || "").trim().slice(0, 80),
+          portion: String((item && item.portion) || (item && item.label) || "")
+            .trim()
+            .slice(0, 80),
           grams: Math.max(0, Math.round(Number(item && item.grams) || 0)),
           estimated: true,
-          matched: String((item && item.matched) || (item && item.label) || "").trim().slice(0, 140),
+          matched: String((item && item.matched) || (item && item.label) || "")
+            .trim()
+            .slice(0, 140),
           calories: Math.max(0, Math.round(Number(item && item.calories) || 0)),
           protein: Math.max(0, Math.round(Number(item && item.protein) || 0)),
           fat: Math.max(0, Math.round(Number(item && item.fat) || 0)),
@@ -135,7 +185,7 @@ module.exports = async function handler(req, res) {
     var fat = Math.max(0, Math.round(Number(parsed.fat) || 0));
     var carbs = Math.max(0, Math.round(Number(parsed.carbs) || 0));
 
-    if (!calories && lookedUp.length) {
+    if (type === "add_meal" && !calories && lookedUp.length) {
       calories = lookedUp.reduce(function (sum, row) {
         return sum + row.calories;
       }, 0);
@@ -150,25 +200,30 @@ module.exports = async function handler(req, res) {
       }, 0);
     }
 
-    if (!calories && !lookedUp.length) {
+    if (!calories && !protein && !fat && !carbs) {
       return res.status(400).json({
-        error: "Could not estimate that meal. Try adding a rough portion.",
+        error: "Could not get macros from that. Try food with portions, or day totals like 2500 cal / 180p / 70f / 200c.",
       });
     }
 
     var confidence = String(parsed.confidence || "medium").toLowerCase();
     if (["low", "medium", "high"].indexOf(confidence) === -1) confidence = "medium";
 
+    var defaultName =
+      type === "set_day" ? "Day totals" : type === "add_macros" ? "Macro add" : "Meal";
     var meal = {
-      name: String(parsed.name || description).trim().slice(0, 80) || "Meal",
-      category: categoryHint,
+      type: type,
+      name: String(parsed.name || defaultName).trim().slice(0, 80) || defaultName,
+      category: category || "snack",
       calories: calories,
       protein: protein,
       fat: fat,
       carbs: carbs,
       confidence: confidence,
       source: "coach",
+      summary: String(parsed.summary || "").trim().slice(0, 200),
       items: lookedUp,
+      replacesDay: type === "set_day",
     };
 
     return res.status(200).json({ meal: meal });
