@@ -82,11 +82,19 @@
     return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
   }
 
+  var HISTORY_DAYS = 90;
+
   function weekCompletedDays(store) {
-    var monday = startOfWeek(new Date());
-    var sunday = endOfWeek(monday);
-    var start = toISODate(monday);
-    var end = toISODate(sunday);
+    return recentCompletedDays(store, HISTORY_DAYS);
+  }
+
+  function recentCompletedDays(store, maxDays) {
+    var today = new Date();
+    today.setHours(12, 0, 0, 0);
+    var cutoff = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    cutoff.setDate(cutoff.getDate() - (maxDays || HISTORY_DAYS) + 1);
+    var start = toISODate(cutoff);
+    var end = toISODate(today);
     var days = [];
     Object.keys(store.days || {})
       .sort()
@@ -96,7 +104,14 @@
         if (!exercises.length) return;
         days.push({ date: date, exercises: exercises });
       });
-    return { monday: monday, sunday: sunday, days: days };
+    return {
+      monday: cutoff,
+      sunday: today,
+      days: days,
+      start: start,
+      end: end,
+      windowDays: maxDays || HISTORY_DAYS,
+    };
   }
 
   function uid(prefix) {
@@ -598,15 +613,17 @@
     var meta = document.getElementById("week-day-meta");
     var prevBtn = document.getElementById("week-prev");
     var nextBtn = document.getElementById("week-next");
+    var posEl = document.getElementById("week-day-position");
 
     if (!wrap || !label || !meta || !prevBtn || !nextBtn) return;
 
     if (!days.length) {
-      label.textContent = "—";
-      meta.textContent = "";
+      label.textContent = "No workouts";
+      meta.textContent = "Finished sessions from the last " + HISTORY_DAYS + " days show up here.";
+      if (posEl) posEl.textContent = "";
       prevBtn.disabled = true;
       nextBtn.disabled = true;
-      wrap.innerHTML = '<p class="session-empty">No finished workouts this week yet</p>';
+      wrap.innerHTML = '<p class="session-empty">No finished workouts in the last ' + HISTORY_DAYS + " days</p>";
       return;
     }
 
@@ -616,7 +633,7 @@
       return sum + (Array.isArray(ex.sets) ? ex.sets.length : 0);
     }, 0);
 
-    label.textContent = formatDateShort(day.date);
+    label.textContent = formatDateFull(day.date);
     var ppl = workoutPplLabel(day.exercises);
     meta.textContent =
       (ppl ? ppl + " · " : "") +
@@ -627,6 +644,9 @@
       totalSets +
       " set" +
       (totalSets === 1 ? "" : "s");
+    if (posEl) {
+      posEl.textContent = weekDayIndex + 1 + " / " + days.length;
+    }
     prevBtn.disabled = days.length <= 1;
     nextBtn.disabled = days.length <= 1;
     wrap.innerHTML =
@@ -640,13 +660,19 @@
     if (!hasWeekUI) return;
     var rangeEl = document.getElementById("week-workouts-range");
     if (!rangeEl) return;
-    var week = weekCompletedDays(loadStore());
-    var days = week.days;
+    var history = recentCompletedDays(loadStore(), HISTORY_DAYS);
+    var days = history.days;
     var opts = { month: "short", day: "numeric" };
     rangeEl.textContent =
-      week.monday.toLocaleDateString(undefined, opts) +
+      "Last " +
+      HISTORY_DAYS +
+      " days · " +
+      history.monday.toLocaleDateString(undefined, opts) +
       " – " +
-      week.sunday.toLocaleDateString(undefined, opts);
+      history.sunday.toLocaleDateString(undefined, opts) +
+      (days.length
+        ? " · " + days.length + " workout" + (days.length === 1 ? "" : "s")
+        : "");
 
     if (days.length !== weekDayCount) {
       weekDayIndex = Math.max(0, days.length - 1);
@@ -770,12 +796,12 @@
 
     if (weekPrevBtn) {
       weekPrevBtn.addEventListener("click", function () {
-        showWeekDay(weekDayIndex - 1, weekCompletedDays(loadStore()).days);
+        showWeekDay(weekDayIndex - 1, recentCompletedDays(loadStore(), HISTORY_DAYS).days);
       });
     }
     if (weekNextBtn) {
       weekNextBtn.addEventListener("click", function () {
-        showWeekDay(weekDayIndex + 1, weekCompletedDays(loadStore()).days);
+        showWeekDay(weekDayIndex + 1, recentCompletedDays(loadStore(), HISTORY_DAYS).days);
       });
     }
     if (weekWorkoutsWrap) {

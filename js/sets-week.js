@@ -205,6 +205,130 @@
       .join("");
   }
 
+  var detailDays = [];
+  var detailDayIndex = 0;
+
+  function formatDayLabel(iso) {
+    var d = new Date(iso + "T12:00:00");
+    return d.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function formatWeight(n) {
+    var r = Math.round(Number(n) * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  }
+
+  function formatSetWeight(set) {
+    var weight = formatWeight(set.weight);
+    if (set.load === "each") return weight + " ea";
+    return weight;
+  }
+
+  function setSummaryLine(sets) {
+    return (sets || [])
+      .map(function (set) {
+        return set.reps + "×" + formatSetWeight(set);
+      })
+      .join(" · ");
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function workoutDaysForWeek(mondayISO) {
+    var monday = targetsApi.startOfWeek(new Date(mondayISO + "T12:00:00"));
+    var sunday = endOfWeek(monday);
+    var start = toISO(monday);
+    var end = toISO(sunday);
+    var daysMap = loadWorkoutDays();
+    var days = [];
+    Object.keys(daysMap)
+      .sort()
+      .forEach(function (date) {
+        if (date < start || date > end) return;
+        var exercises = Array.isArray(daysMap[date]) ? daysMap[date] : [];
+        if (!exercises.length) return;
+        days.push({ date: date, exercises: exercises });
+      });
+    return days;
+  }
+
+  function renderDetailExercises(exercises) {
+    return exercises
+      .map(function (ex) {
+        var count = Array.isArray(ex.sets) ? ex.sets.length : 0;
+        return (
+          '<article class="session-exercise">' +
+          '<div class="session-exercise__top">' +
+          "<div>" +
+          '<h3 class="session-exercise__name">' +
+          escapeHtml(ex.name) +
+          "</h3>" +
+          '<p class="session-exercise__sets">' +
+          count +
+          " set" +
+          (count === 1 ? "" : "s") +
+          "</p>" +
+          '<p class="session-exercise__detail">' +
+          escapeHtml(setSummaryLine(ex.sets || [])) +
+          "</p>" +
+          "</div>" +
+          "</div>" +
+          "</article>"
+        );
+      })
+      .join("");
+  }
+
+  function showDetailDay(index) {
+    var label = document.getElementById("week-detail-day-label");
+    var meta = document.getElementById("week-detail-day-meta");
+    var pos = document.getElementById("week-detail-day-position");
+    var wrap = document.getElementById("week-detail-workouts");
+    var prevBtn = document.getElementById("week-detail-prev");
+    var nextBtn = document.getElementById("week-detail-next");
+    if (!label || !meta || !wrap || !prevBtn || !nextBtn) return;
+
+    if (!detailDays.length) {
+      label.textContent = "No workouts";
+      meta.textContent = "No finished sessions this week.";
+      if (pos) pos.textContent = "";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      wrap.innerHTML = '<p class="session-empty">No finished workouts this week</p>';
+      return;
+    }
+
+    detailDayIndex = (index + detailDays.length) % detailDays.length;
+    var day = detailDays[detailDayIndex];
+    var totalSets = day.exercises.reduce(function (sum, ex) {
+      return sum + (Array.isArray(ex.sets) ? ex.sets.length : 0);
+    }, 0);
+
+    label.textContent = formatDayLabel(day.date);
+    meta.textContent =
+      day.exercises.length +
+      " exercise" +
+      (day.exercises.length === 1 ? "" : "s") +
+      " · " +
+      totalSets +
+      " set" +
+      (totalSets === 1 ? "" : "s");
+    if (pos) pos.textContent = detailDayIndex + 1 + " / " + detailDays.length;
+    prevBtn.disabled = detailDays.length <= 1;
+    nextBtn.disabled = detailDays.length <= 1;
+    wrap.innerHTML = '<div class="session-list">' + renderDetailExercises(day.exercises) + "</div>";
+  }
+
   function openWeekDetail(mondayISO) {
     var monday = targetsApi.startOfWeek(new Date(mondayISO + "T12:00:00"));
     var sunday = endOfWeek(monday);
@@ -216,6 +340,11 @@
       : "<th>Group</th><th class=\"num\">Target</th><th class=\"num\">Done</th>";
     document.getElementById("week-detail-title").textContent = formatRange(monday, sunday);
     renderGroupTable(document.getElementById("week-detail-table"), mondayISO, isCurrent);
+
+    detailDays = workoutDaysForWeek(mondayISO);
+    detailDayIndex = Math.max(0, detailDays.length - 1);
+    showDetailDay(detailDayIndex);
+
     document.getElementById("week-detail-sheet").hidden = false;
     document.body.style.overflow = "hidden";
   }
@@ -223,6 +352,8 @@
   function closeWeekDetail() {
     document.getElementById("week-detail-sheet").hidden = true;
     document.body.style.overflow = "";
+    detailDays = [];
+    detailDayIndex = 0;
   }
 
   function refresh() {
@@ -256,6 +387,19 @@
   document.getElementById("week-detail-sheet").addEventListener("click", function (event) {
     if (event.target.closest("[data-close-week]")) closeWeekDetail();
   });
+
+  var detailPrev = document.getElementById("week-detail-prev");
+  var detailNext = document.getElementById("week-detail-next");
+  if (detailPrev) {
+    detailPrev.addEventListener("click", function () {
+      showDetailDay(detailDayIndex - 1);
+    });
+  }
+  if (detailNext) {
+    detailNext.addEventListener("click", function () {
+      showDetailDay(detailDayIndex + 1);
+    });
+  }
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") closeWeekDetail();

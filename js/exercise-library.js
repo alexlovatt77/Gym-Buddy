@@ -41,6 +41,8 @@ window.STUDIO_EXERCISE_LIBRARY = [
       "Cable rows",
       "Lat pull-down",
       "Pull-ups",
+      "Rear delt flies",
+      "Seated machine row",
     ]),
   },
   {
@@ -65,9 +67,11 @@ window.STUDIO_EXERCISE_LIBRARY = [
       "Dips",
       "Dumbbell press",
       "Incline dumbbell press",
+      "Incline machine press",
       "Incline smith press",
       "Machine flies",
       "Smith press",
+      "Supine press",
     ]),
   },
   {
@@ -126,6 +130,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Face pulls",
       "Front raises",
       "Incline dumbbell press",
+      "Incline machine press",
       "Incline smith press",
       "Lateral raises",
       "Machine flies",
@@ -136,6 +141,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Single-arm tricep push-downs",
       "Skull crushers",
       "Smith press",
+      "Supine press",
       "Tricep barbell bench",
       "Tricep dumbbell bench",
       "Tricep rope push-downs",
@@ -153,7 +159,9 @@ window.STUDIO_PPL_LIBRARY = [
       "Cable rows",
       "Lat pull-down",
       "Pull-ups",
+      "Rear delt flies",
       "Seated decline curls",
+      "Seated machine row",
       "Single-arm bicep curls",
     ]),
   },
@@ -205,7 +213,9 @@ window.studioSetCredits = function (exerciseName) {
 
   var isBenchPress =
     name === "incline smith press" ||
+    name === "incline machine press" ||
     name === "smith press" ||
+    name === "supine press" ||
     name === "incline dumbbell press" ||
     name === "dumbbell press" ||
     name === "chest press" ||
@@ -217,6 +227,7 @@ window.studioSetCredits = function (exerciseName) {
 
   var isRow =
     name === "cable rows" ||
+    name === "seated machine row" ||
     name === "bent-over smith row" ||
     name === "bent-over barbell row";
 
@@ -234,6 +245,7 @@ window.studioSetCredits = function (exerciseName) {
   if (isOverheadPress) addSecondary("Triceps", 0.5);
   if (name === "pull-ups") addSecondary("Biceps", 0.5);
   if (isRow) addSecondary("Biceps", 0.5);
+  if (name === "rear delt flies") addSecondary("Shoulders", 0.5);
   if (isSquatPattern) addSecondary("Glutes", 0.5);
   if (name === "hip thrusts") addSecondary("Hamstrings", 0.5);
 

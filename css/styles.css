@@ -1702,6 +1702,88 @@ a:hover {
   margin-top: 0;
 }
 
+.workout-browser {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-raised);
+}
+
+.workout-browser--compact {
+  padding: var(--space-3);
+  gap: var(--space-3);
+}
+
+.workout-browser__nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.workout-browser__arrow {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+}
+
+.workout-browser__heading {
+  min-width: 0;
+  text-align: center;
+}
+
+.workout-browser__date {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.workout-browser__position {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.workout-browser__meta {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.week-detail {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.week-detail__block {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.week-detail__heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.sheet__panel--week-detail {
+  max-height: min(92vh, 52rem);
+  overflow: auto;
+}
+
 .week-cal {
   display: flex;
   flex-direction: column;
@@ -1757,6 +1839,20 @@ a:hover {
   font-size: 0.8rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+[data-theme="fallout"] .workout-browser,
+[data-theme="fallout"] .sheet__panel--week-detail {
+  border-radius: 0;
+  background: #061008;
+  border-color: var(--line-strong);
+}
+
+[data-theme="fallout"] .workout-browser__date,
+[data-theme="fallout"] .week-detail__heading {
+  font-family: "Share Tech Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .record-form input[type="text"] {

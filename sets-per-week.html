@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Week — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=16" />
+    <link rel="stylesheet" href="css/styles.css?v=23" />
   </head>
   <body>
     <div class="app">
@@ -22,17 +22,20 @@
           <h2 class="section__title" id="week-workouts-heading">Workouts</h2>
           <p class="section__note" id="week-workouts-range">—</p>
 
-          <div class="chart-slideshow">
-            <div class="cal-nav">
-              <button class="btn btn--ghost" type="button" id="week-prev" aria-label="Previous day">
+          <div class="workout-browser">
+            <div class="workout-browser__nav">
+              <button class="btn btn--ghost workout-browser__arrow" type="button" id="week-prev" aria-label="Previous workout">
                 ←
               </button>
-              <p class="cal-nav__label" id="week-day-label">—</p>
-              <button class="btn btn--ghost" type="button" id="week-next" aria-label="Next day">
+              <div class="workout-browser__heading">
+                <p class="workout-browser__date" id="week-day-label">—</p>
+                <p class="workout-browser__position" id="week-day-position"></p>
+              </div>
+              <button class="btn btn--ghost workout-browser__arrow" type="button" id="week-next" aria-label="Next workout">
                 →
               </button>
             </div>
-            <p class="chart-slide-meta" id="week-day-meta"></p>
+            <p class="workout-browser__meta" id="week-day-meta"></p>
             <div id="week-workouts" class="week-workouts"></div>
           </div>
         </section>
@@ -72,21 +75,62 @@
 
       <div class="sheet" id="week-detail-sheet" hidden>
         <div class="sheet__backdrop" data-close-week tabindex="-1"></div>
-        <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="week-detail-title">
+        <div
+          class="sheet__panel sheet__panel--week-detail"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="week-detail-title"
+        >
           <div class="sheet__header">
             <h2 class="sheet__title" id="week-detail-title">Week</h2>
             <button class="sheet__close" type="button" data-close-week aria-label="Close">Close</button>
           </div>
-          <table class="ledger">
-            <thead>
-              <tr id="week-detail-head">
-                <th>Group</th>
-                <th class="num">Target</th>
-                <th class="num">Done</th>
-              </tr>
-            </thead>
-            <tbody id="week-detail-table"></tbody>
-          </table>
+
+          <div class="week-detail">
+            <section class="week-detail__block" aria-labelledby="week-detail-volume-heading">
+              <h3 class="week-detail__heading" id="week-detail-volume-heading">Volume</h3>
+              <table class="ledger">
+                <thead>
+                  <tr id="week-detail-head">
+                    <th>Group</th>
+                    <th class="num">Target</th>
+                    <th class="num">Done</th>
+                  </tr>
+                </thead>
+                <tbody id="week-detail-table"></tbody>
+              </table>
+            </section>
+
+            <section class="week-detail__block" aria-labelledby="week-detail-workouts-heading">
+              <h3 class="week-detail__heading" id="week-detail-workouts-heading">Workouts</h3>
+              <div class="workout-browser workout-browser--compact">
+                <div class="workout-browser__nav">
+                  <button
+                    class="btn btn--ghost workout-browser__arrow"
+                    type="button"
+                    id="week-detail-prev"
+                    aria-label="Previous workout that week"
+                  >
+                    ←
+                  </button>
+                  <div class="workout-browser__heading">
+                    <p class="workout-browser__date" id="week-detail-day-label">—</p>
+                    <p class="workout-browser__position" id="week-detail-day-position"></p>
+                  </div>
+                  <button
+                    class="btn btn--ghost workout-browser__arrow"
+                    type="button"
+                    id="week-detail-next"
+                    aria-label="Next workout that week"
+                  >
+                    →
+                  </button>
+                </div>
+                <p class="workout-browser__meta" id="week-detail-day-meta"></p>
+                <div id="week-detail-workouts" class="week-workouts"></div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 
@@ -103,9 +147,9 @@
     <script src="js/app-data.js?v=3"></script>
     <script src="js/nav.js"></script>
     <script src="js/undo.js?v=2"></script>
-    <script src="js/exercise-library.js?v=5"></script>
+    <script src="js/exercise-library.js?v=6"></script>
     <script src="js/targets.js"></script>
-    <script src="js/workout.js?v=11"></script>
-    <script src="js/sets-week.js?v=2"></script>
+    <script src="js/workout.js?v=12"></script>
+    <script src="js/sets-week.js?v=3"></script>
   </body>
 </html>
