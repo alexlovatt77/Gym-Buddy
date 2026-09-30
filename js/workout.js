@@ -198,13 +198,23 @@
   }
 
   function syncLoadModeUi() {
+    var exerciseName = exerciseSelect ? String(exerciseSelect.value || "").toLowerCase() : "";
+    var isPullUp = exerciseName === "pull-ups";
     var isEach = selectedLoadMode === "each";
-    if (weightLabel) weightLabel.textContent = isEach ? "Weight · each" : "Weight · total";
+    if (weightLabel) {
+      weightLabel.textContent = isPullUp
+        ? "Weight · added / assisted"
+        : isEach
+          ? "Weight · each"
+          : "Weight · total";
+    }
     if (weightUnit) weightUnit.textContent = isEach ? "lbs each" : "lbs";
     if (loadNote) {
-      loadNote.textContent = isEach
-        ? "One dumbbell or one side"
-        : "Full bar, stack, or machine load";
+      loadNote.textContent = isPullUp
+        ? "Use a negative weight for assisted pull-ups"
+        : isEach
+          ? "One dumbbell or one side"
+          : "Full bar, stack, or machine load";
     }
     if (!loadToggle) return;
     var buttons = loadToggle.querySelectorAll("[data-load]");
@@ -386,17 +396,27 @@
   var selectedLoadMode = "total";
   var loadModeTouched = false;
 
+  function supportsNegativeWeight(exerciseName) {
+    return String(exerciseName || "").toLowerCase() === "pull-ups";
+  }
+
+  function fillWeightOptions(exerciseName, preferredWeight) {
+    if (!weightSelect) return;
+    var minimum = supportsNegativeWeight(exerciseName) ? -250 : 0;
+    fillSelect(weightSelect, range(minimum, 250, 5), function (v) {
+      return Number.isInteger(v) ? String(v) : v.toFixed(1);
+    });
+    var preferred = Number(preferredWeight);
+    if (!isFinite(preferred) || preferred < minimum || preferred > 250 || preferred % 5 !== 0) {
+      preferred = 0;
+    }
+    setSelectValue(weightSelect, preferred);
+  }
+
   if (hasTodayUI && repsSelect && weightSelect) {
     fillSelect(repsSelect, range(1, 12));
-    fillSelect(
-      weightSelect,
-      range(0, 250, 5),
-      function (v) {
-        return Number.isInteger(v) ? String(v) : v.toFixed(1);
-      }
-    );
+    fillWeightOptions("", 135);
     setSelectValue(repsSelect, 8);
-    setSelectValue(weightSelect, 135);
   }
 
   function syncDay() {
@@ -457,7 +477,7 @@
   function applyRepsWeightDefaults(exerciseName) {
     var prefs = loadPickerPrefs();
     setSelectValue(repsSelect, prefs.reps != null ? prefs.reps : 8);
-    setSelectValue(weightSelect, prefs.weight != null ? prefs.weight : 135);
+    fillWeightOptions(exerciseName, prefs.weight != null ? prefs.weight : 135);
     var sameExercise =
       exerciseName &&
       prefs.exercise &&
@@ -569,7 +589,9 @@
 
   function setSelectedExercise(name) {
     if (!exerciseSelect) return;
+    var previousWeight = weightSelect ? Number(weightSelect.value) : 0;
     exerciseSelect.value = name || "";
+    fillWeightOptions(name, previousWeight);
     if (!exercisePicker) return;
     var buttons = exercisePicker.querySelectorAll("[data-exercise]");
     for (var i = 0; i < buttons.length; i++) {
@@ -1052,18 +1074,18 @@
 
         var reps = Number(repsSelect.value);
         var weight = Number(weightSelect.value);
+        var name = exerciseSelect.value || null;
         if (!isFinite(reps) || reps < 1) {
           errorEl.textContent = "Choose reps.";
           errorEl.hidden = false;
           return;
         }
-        if (!isFinite(weight) || weight < 0) {
+        if (!isFinite(weight) || (weight < 0 && !supportsNegativeWeight(name))) {
           errorEl.textContent = "Choose weight.";
           errorEl.hidden = false;
           return;
         }
 
-        var name = exerciseSelect.value || null;
         if (!name) {
           errorEl.textContent = "Choose an exercise from the library.";
           errorEl.hidden = false;

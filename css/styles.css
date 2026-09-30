@@ -1037,6 +1037,8 @@ a:hover {
 .exercise-picker__item {
   display: block;
   width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   margin: 0;
   padding: 0.72rem 0.85rem;
   text-align: left;
