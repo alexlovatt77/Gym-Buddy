@@ -40,6 +40,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
       "Cable pull-downs",
       "Cable rows",
       "Lat pull-down",
+      "Lower back raises",
       "Pull-ups",
       "Rear delt flies",
       "Seated machine row",
@@ -62,6 +63,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
   {
     category: "Chest",
     exercises: studioSortNames([
+      "Barbell bench",
       "Cable flies",
       "Chest press",
       "Dips",
@@ -85,11 +87,12 @@ window.STUDIO_EXERCISE_LIBRARY = [
   {
     category: "Quads",
     exercises: studioSortNames([
+      "Barbell squat",
       "Bulgarian split squat",
       "Elevated lunges",
       "Hack squat",
       "Quad extensions",
-      "Quad squats",
+      "Smith squats",
     ]),
   },
   {
@@ -124,6 +127,7 @@ window.STUDIO_PPL_LIBRARY = [
   {
     category: "Push",
     exercises: studioSortNames([
+      "Barbell bench",
       "Cable flies",
       "Chest press",
       "Dips",
@@ -162,6 +166,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Cable pull-downs",
       "Cable rows",
       "Lat pull-down",
+      "Lower back raises",
       "Pull-ups",
       "Rear delt flies",
       "Seated decline curls",
@@ -172,6 +177,7 @@ window.STUDIO_PPL_LIBRARY = [
   {
     category: "Legs",
     exercises: studioSortNames([
+      "Barbell squat",
       "Bulgarian split squat",
       "Calf raises",
       "Elevated lunges",
@@ -180,7 +186,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Hip thrusts",
       "Prone leg curl",
       "Quad extensions",
-      "Quad squats",
+      "Smith squats",
     ]),
   },
 ];
@@ -206,6 +212,8 @@ window.studioSetCredits = function (exerciseName) {
     if (primary) break;
   }
 
+  // Keep renamed exercises in historical workouts credited to their original muscle group.
+  if (!primary && name === "quad squats") primary = "Quads";
   if (!primary) return [];
 
   var credits = [{ group: primary, amount: 1 }];
@@ -216,6 +224,7 @@ window.studioSetCredits = function (exerciseName) {
   }
 
   var isBenchPress =
+    name === "barbell bench" ||
     name === "incline smith press" ||
     name === "incline machine press" ||
     name === "smith press" ||
@@ -236,6 +245,8 @@ window.studioSetCredits = function (exerciseName) {
     name === "bent-over barbell row";
 
   var isSquatPattern =
+    name === "barbell squat" ||
+    name === "smith squats" ||
     name === "quad squats" ||
     name === "hack squat" ||
     name === "bulgarian split squat" ||
@@ -250,6 +261,10 @@ window.studioSetCredits = function (exerciseName) {
   if (name === "pull-ups") addSecondary("Biceps", 0.5);
   if (isRow) addSecondary("Biceps", 0.5);
   if (name === "rear delt flies") addSecondary("Shoulders", 0.5);
+  if (name === "lower back raises") {
+    addSecondary("Glutes", 0.5);
+    addSecondary("Hamstrings", 0.5);
+  }
   if (isSquatPattern) addSecondary("Glutes", 0.5);
   if (name === "hip thrusts") addSecondary("Hamstrings", 0.5);
 
