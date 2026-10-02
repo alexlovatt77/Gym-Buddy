@@ -1,7 +1,29 @@
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "studio.weight.v2";
+  var isTrackerPage = /weight-tracking\.html$/i.test(window.location.pathname);
+  var requestedMetric = new URLSearchParams(window.location.search).get("track");
+  var isMuscle = isTrackerPage && requestedMetric === "muscle";
+  var metric = isMuscle
+    ? {
+        name: "Muscle mass",
+        nameLower: "muscle mass",
+        storageKey: "studio.muscle.v1",
+        defaultValue: 75,
+        maxValue: 300,
+        emptyText: "No muscle mass readings yet",
+        removedText: "Muscle mass reading removed",
+      }
+    : {
+        name: "Weight",
+        nameLower: "weight",
+        storageKey: "studio.weight.v2",
+        defaultValue: 180,
+        maxValue: 400,
+        emptyText: "No weigh-ins yet",
+        removedText: "Weigh-in removed",
+      };
+  var STORAGE_KEY = metric.storageKey;
   var WINDOW = 7;
 
   function emptyStore() {
@@ -17,7 +39,7 @@
         entries: Array.isArray(data.entries) ? data.entries : [],
       };
     } catch (err) {
-      console.warn("Could not read weight store", err);
+      console.warn("Could not read " + metric.nameLower + " store", err);
       return emptyStore();
     }
   }
@@ -190,10 +212,41 @@
   var editError = document.getElementById("edit-weight-error");
   var editingDate = null;
 
-  fillSelect(wholeSelect, range(0, 400, 1));
+  function configureTrackerPage() {
+    if (!isTrackerPage) return;
+    document.title = metric.name + " — Gym Buddy";
+
+    var kicker = document.getElementById("body-metric-kicker");
+    var title = document.getElementById("body-metric-title");
+    var inputLabel = document.getElementById("weight-lbs-label");
+    var historyLabel = document.getElementById("body-metric-history-label");
+    var chart = document.getElementById("weight-chart");
+    var editTitle = document.getElementById("edit-weight-title");
+    var editLabel = document.getElementById("edit-weight-lbs-label");
+    var editSubmit = document.querySelector("#edit-weight-form button[type='submit']");
+
+    if (kicker) kicker.textContent = isMuscle ? "Body composition" : "Bodyweight";
+    if (title) title.textContent = metric.name;
+    if (inputLabel) inputLabel.textContent = metric.name;
+    if (historyLabel) historyLabel.textContent = metric.name;
+    if (chart) chart.setAttribute("aria-label", metric.name + " chart");
+    if (editTitle) editTitle.textContent = "Update " + metric.nameLower;
+    if (editLabel) editLabel.textContent = metric.name;
+    if (editSubmit) editSubmit.textContent = "Save " + metric.nameLower;
+
+    document.querySelectorAll("[data-metric-link]").forEach(function (link) {
+      var active = link.getAttribute("data-metric-link") === (isMuscle ? "muscle" : "weight");
+      if (active) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
+  configureTrackerPage();
+
+  fillSelect(wholeSelect, range(0, metric.maxValue, 1));
   fillDecimalSelect(decimalSelect);
   if (editWholeSelect && editDecimalSelect) {
-    fillSelect(editWholeSelect, range(0, 400, 1));
+    fillSelect(editWholeSelect, range(0, metric.maxValue, 1));
     fillDecimalSelect(editDecimalSelect);
   }
 
@@ -333,10 +386,12 @@
     }
 
     setDayLocked(false);
-    setWeightSelects(existing ? existing.weight : 180);
+    setWeightSelects(existing ? existing.weight : metric.defaultValue);
     var saveBtn = document.getElementById("weight-save");
     if (saveBtn) {
-      saveBtn.textContent = existing ? "Update today’s weight" : "Save today’s weight";
+      saveBtn.textContent = existing
+        ? "Update today’s " + metric.nameLower
+        : "Save today’s " + metric.nameLower;
     }
   }
 
@@ -345,7 +400,9 @@
     var entries = dedupeByDate(loadStore().entries).slice().reverse();
     if (!entries.length) {
       historyBody.innerHTML =
-        '<tr class="is-placeholder"><td colspan="3">No weigh-ins yet</td></tr>';
+        '<tr class="is-placeholder"><td colspan="3">' +
+        escapeHtml(metric.emptyText) +
+        "</td></tr>";
       return;
     }
     historyBody.innerHTML = entries
@@ -429,7 +486,10 @@
     var isWeekly = chartMode === "weekly";
 
     if (!series.length) {
-      chartEl.innerHTML = '<p class="chart-empty">Add today’s weight to start the chart.</p>';
+      chartEl.innerHTML =
+        '<p class="chart-empty">Add today’s ' +
+        escapeHtml(metric.nameLower) +
+        " to start the chart.</p>";
       chartEl._series = [];
       return;
     }
@@ -660,7 +720,9 @@
         "<strong>" +
         escapeHtml(formatDateFull(point.date)) +
         "</strong>" +
-        "<span>Weight: " +
+        "<span>" +
+        escapeHtml(metric.name) +
+        ": " +
         escapeHtml(formatLbs(point.weight)) +
         "</span>";
     }
@@ -717,14 +779,14 @@
       var weight = combinedWeight();
       if (!isFinite(weight) || weight < 0) {
         if (errorEl) {
-          errorEl.textContent = "Choose a weight.";
+          errorEl.textContent = "Choose " + metric.nameLower + ".";
           errorEl.hidden = false;
         }
         return;
       }
       upsertWeight(todayISO(), weight);
       refresh();
-      if (window.studioToast) window.studioToast.show("Weight saved");
+      if (window.studioToast) window.studioToast.show(metric.name + " saved");
     });
   }
 
@@ -746,7 +808,7 @@
         var weight = combinedFrom(editWholeSelect, editDecimalSelect);
         if (!isFinite(weight) || weight < 0) {
           if (editError) {
-            editError.textContent = "Choose a weight.";
+            editError.textContent = "Choose " + metric.nameLower + ".";
             editError.hidden = false;
           }
           return;
@@ -754,7 +816,7 @@
         upsertWeight(editingDate, weight);
         closeEditWeight();
         refresh();
-        if (window.studioToast) window.studioToast.show("Weight updated");
+        if (window.studioToast) window.studioToast.show(metric.name + " updated");
       });
     }
 
@@ -768,7 +830,7 @@
         refresh();
         if (removed && window.studioUndo) {
           window.studioUndo.offer({
-            message: "Weigh-in removed",
+            message: metric.removedText,
             onUndo: function () {
               upsertWeight(removed.date, removed.weight);
               refresh();

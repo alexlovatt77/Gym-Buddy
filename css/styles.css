@@ -1129,6 +1129,38 @@ a:hover {
   min-width: 8rem;
 }
 
+.metric-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+  margin: var(--space-4) 0 var(--space-6);
+  padding: 0.3rem;
+  background: color-mix(in srgb, var(--paper-raised) 85%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.metric-switch a {
+  padding: 0.62rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  color: var(--muted);
+  border-radius: 999px;
+}
+
+.metric-switch a[aria-current="true"] {
+  color: var(--fjord);
+  background: var(--glass-bg-strong);
+  box-shadow: var(--glass-btn-shadow);
+}
+
+[data-theme="fallout"] .metric-switch a[aria-current="true"] {
+  color: #031006;
+  background: var(--signal);
+}
+
 .weight-chart-wrap {
   position: relative;
 }

@@ -7,7 +7,7 @@
     <script src="js/theme.js?v=3"></script>
     <meta name="apple-mobile-web-app-title" content="Gym Buddy" />
     <title>Weight — Gym Buddy</title>
-    <link rel="stylesheet" href="css/styles.css?v=13" />
+    <link rel="stylesheet" href="css/styles.css?v=27" />
   </head>
   <body>
     <div class="app">
@@ -16,8 +16,13 @@
       </header>
 
       <main class="page">
-        <p class="page__kicker">Bodyweight</p>
-        <h1 class="page__title">Weight</h1>
+        <p class="page__kicker" id="body-metric-kicker">Bodyweight</p>
+        <h1 class="page__title" id="body-metric-title">Weight</h1>
+
+        <nav class="metric-switch" aria-label="Body measurement">
+          <a href="weight-tracking.html" data-metric-link="weight">Weight</a>
+          <a href="weight-tracking.html?track=muscle" data-metric-link="muscle">Muscle mass</a>
+        </nav>
 
         <section class="section" aria-labelledby="log-weight">
           <h2 class="section__title" id="log-weight">Today</h2>
@@ -69,7 +74,7 @@
             <thead>
               <tr>
                 <th>Date</th>
-                <th class="num">Weight</th>
+                <th class="num" id="body-metric-history-label">Weight</th>
                 <th class="num"></th>
               </tr>
             </thead>
@@ -120,14 +125,14 @@
         <a href="sets-per-week.html"><span class="tabbar__word">Week</span></a>
         <a href="exercise-maxes.html"><span class="tabbar__word">Maxes</span></a>
         <a href="daily-macro.html"><span class="tabbar__word">Macros</span></a>
-        <a href="weight-tracking.html"><span class="tabbar__word">Weight</span></a>
+        <a href="weight-tracking.html"><span class="tabbar__word">Body</span></a>
         <a href="water.html"><span class="tabbar__word">Water</span></a>
         <a href="settings.html"><span class="tabbar__word">Settings</span></a>
       </nav>
     </div>
-    <script src="js/app-data.js?v=3"></script>
+    <script src="js/app-data.js?v=4"></script>
     <script src="js/nav.js"></script>
     <script src="js/undo.js?v=2"></script>
-    <script src="js/weight.js?v=2"></script>
+    <script src="js/weight.js?v=3"></script>
   </body>
 </html>
