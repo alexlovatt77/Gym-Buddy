@@ -78,7 +78,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
   },
   {
     category: "Glutes",
-    exercises: studioSortNames(["Hip thrusts"]),
+    exercises: studioSortNames(["Hip adductor machine", "Hip thrusts"]),
   },
   {
     category: "Hamstrings",
@@ -98,6 +98,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
   {
     category: "Shoulders",
     exercises: studioSortNames([
+      "Barbell shoulder press",
       "Dumbbell shoulder press",
       "Face pulls",
       "Front raises",
@@ -128,6 +129,7 @@ window.STUDIO_PPL_LIBRARY = [
     category: "Push",
     exercises: studioSortNames([
       "Barbell bench",
+      "Barbell shoulder press",
       "Cable flies",
       "Chest press",
       "Dips",
@@ -183,6 +185,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Elevated lunges",
       "Hack squat",
       "Hamstring curls",
+      "Hip adductor machine",
       "Hip thrusts",
       "Prone leg curl",
       "Quad extensions",
@@ -236,7 +239,9 @@ window.studioSetCredits = function (exerciseName) {
     name === "tricep barbell bench";
 
   var isOverheadPress =
-    name === "dumbbell shoulder press" || name === "military press";
+    name === "dumbbell shoulder press" ||
+    name === "military press" ||
+    name === "barbell shoulder press";
 
   var isRow =
     name === "cable rows" ||

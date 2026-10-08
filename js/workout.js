@@ -261,7 +261,7 @@
   function exerciseHistory(store, exerciseName, limit) {
     var lower = String(exerciseName || "").toLowerCase();
     if (!lower) return [];
-    var max = limit || 5;
+    var max = limit || Infinity;
     var sessions = [];
     var dates = Object.keys(store.days || {}).sort().reverse();
     for (var i = 0; i < dates.length; i++) {
@@ -289,9 +289,11 @@
 
     var name = String(exerciseName || "").trim();
     title.textContent = name || "History";
-    if (subtitle) subtitle.textContent = "Last 5 finished sessions";
-
-    var sessions = exerciseHistory(loadStore(), name, 5);
+    var sessions = exerciseHistory(loadStore(), name);
+    if (subtitle) {
+      subtitle.textContent =
+        sessions.length === 1 ? "1 finished session" : sessions.length + " finished sessions";
+    }
     if (!sessions.length) {
       list.innerHTML =
         '<p class="session-empty">No past sessions for this exercise yet.</p>';
