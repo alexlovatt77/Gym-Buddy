@@ -58,7 +58,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
   },
   {
     category: "Calves",
-    exercises: studioSortNames(["Calf raises"]),
+    exercises: studioSortNames(["Calf raises", "Seated calf machine"]),
   },
   {
     category: "Chest",
@@ -103,6 +103,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
       "Face pulls",
       "Front raises",
       "Lateral raises",
+      "Machine shoulder press",
       "Machine shoulder raises",
       "Military press",
       "Shrugs",
@@ -141,8 +142,9 @@ window.STUDIO_PPL_LIBRARY = [
       "Incline machine press",
       "Incline smith press",
       "Lateral raises",
-      "Machine shoulder raises",
       "Machine flies",
+      "Machine shoulder press",
+      "Machine shoulder raises",
       "Military press",
       "Overhead tricep dumbbell raises",
       "Overhead tricep extensions",
@@ -183,6 +185,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Bulgarian split squat",
       "Calf raises",
       "Elevated lunges",
+      "Seated calf machine",
       "Hack squat",
       "Hamstring curls",
       "Hip adductor machine",
@@ -241,7 +244,8 @@ window.studioSetCredits = function (exerciseName) {
   var isOverheadPress =
     name === "dumbbell shoulder press" ||
     name === "military press" ||
-    name === "barbell shoulder press";
+    name === "barbell shoulder press" ||
+    name === "machine shoulder press";
 
   var isRow =
     name === "cable rows" ||
