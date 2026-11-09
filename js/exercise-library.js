@@ -37,6 +37,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
     exercises: studioSortNames([
       "Bent-over barbell row",
       "Bent-over smith row",
+      "Bias lat pull-downs",
       "Cable pull-downs",
       "Cable rows",
       "Lat pull-down",
@@ -58,7 +59,11 @@ window.STUDIO_EXERCISE_LIBRARY = [
   },
   {
     category: "Calves",
-    exercises: studioSortNames(["Calf raises", "Seated calf machine"]),
+    exercises: studioSortNames([
+      "Calf raises",
+      "Machine seated calf raises",
+      "Seated calf machine",
+    ]),
   },
   {
     category: "Chest",
@@ -91,6 +96,7 @@ window.STUDIO_EXERCISE_LIBRARY = [
       "Bulgarian split squat",
       "Elevated lunges",
       "Hack squat",
+      "Leg press",
       "Quad extensions",
       "Smith squats",
     ]),
@@ -167,6 +173,7 @@ window.STUDIO_PPL_LIBRARY = [
       "Bent-over smith row",
       "Bicep pull-downs",
       "Cable curls",
+      "Bias lat pull-downs",
       "Cable pull-downs",
       "Cable rows",
       "Lat pull-down",
@@ -185,13 +192,15 @@ window.STUDIO_PPL_LIBRARY = [
       "Bulgarian split squat",
       "Calf raises",
       "Elevated lunges",
-      "Seated calf machine",
       "Hack squat",
       "Hamstring curls",
       "Hip adductor machine",
       "Hip thrusts",
+      "Leg press",
+      "Machine seated calf raises",
       "Prone leg curl",
       "Quad extensions",
+      "Seated calf machine",
       "Smith squats",
     ]),
   },
@@ -258,6 +267,7 @@ window.studioSetCredits = function (exerciseName) {
     name === "smith squats" ||
     name === "quad squats" ||
     name === "hack squat" ||
+    name === "leg press" ||
     name === "bulgarian split squat" ||
     name === "elevated lunges";
 
