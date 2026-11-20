@@ -402,18 +402,98 @@
     return String(exerciseName || "").toLowerCase() === "pull-ups";
   }
 
+  function maxWeightForExercise(exerciseName) {
+    var name = String(exerciseName || "").toLowerCase();
+    if (name === "leg press") return 400;
+    return 250;
+  }
+
   function fillWeightOptions(exerciseName, preferredWeight) {
     if (!weightSelect) return;
     var minimum = supportsNegativeWeight(exerciseName) ? -250 : 0;
-    fillSelect(weightSelect, range(minimum, 250, 5), function (v) {
+    var maximum = maxWeightForExercise(exerciseName);
+    fillSelect(weightSelect, range(minimum, maximum, 5), function (v) {
       return Number.isInteger(v) ? String(v) : v.toFixed(1);
     });
     var preferred = Number(preferredWeight);
-    if (!isFinite(preferred) || preferred < minimum || preferred > 250 || preferred % 5 !== 0) {
+    if (!isFinite(preferred) || preferred < minimum || preferred > maximum || preferred % 5 !== 0) {
       preferred = 0;
     }
     setSelectValue(weightSelect, preferred);
   }
+
+  var LEG_PRESS_FIX_KEY = "studio.workout.migrate.legpress300.v1";
+
+  function makeLegPressSets(count, weight, reps, load) {
+    var sets = [];
+    var now = Date.now();
+    for (var i = 0; i < count; i++) {
+      sets.push({
+        id: uid("set"),
+        reps: reps,
+        weight: weight,
+        load: normalizeLoadMode(load),
+        at: now + i,
+      });
+    }
+    return sets;
+  }
+
+  function rewriteLegPressExercise(exercise) {
+    if (!exercise || String(exercise.name || "").toLowerCase() !== "leg press") return false;
+    var first = Array.isArray(exercise.sets) && exercise.sets[0] ? exercise.sets[0] : null;
+    var reps = first && isFinite(Number(first.reps)) ? Number(first.reps) : 12;
+    var load = first ? first.load : "total";
+    exercise.sets = makeLegPressSets(12, 300, reps, load);
+    return true;
+  }
+
+  /** One-time: set the 2 most recent Leg press logs to 12 sets × 300 lbs. */
+  function migrateRecentLegPress() {
+    if (localStorage.getItem(LEG_PRESS_FIX_KEY)) return;
+    var store = loadStore();
+    var hits = [];
+
+    if (store.draft && Array.isArray(store.draft.exercises) && store.draft.date) {
+      for (var d = 0; d < store.draft.exercises.length; d++) {
+        var draftEx = store.draft.exercises[d];
+        if (draftEx && String(draftEx.name || "").toLowerCase() === "leg press") {
+          hits.push({ kind: "draft", exercise: draftEx, date: store.draft.date });
+          break;
+        }
+      }
+    }
+
+    Object.keys(store.days || {})
+      .sort()
+      .reverse()
+      .forEach(function (date) {
+        var exercises = Array.isArray(store.days[date]) ? store.days[date] : [];
+        for (var i = 0; i < exercises.length; i++) {
+          var ex = exercises[i];
+          if (ex && String(ex.name || "").toLowerCase() === "leg press") {
+            hits.push({ kind: "day", exercise: ex, date: date });
+            break;
+          }
+        }
+      });
+
+    hits.sort(function (a, b) {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return 0;
+    });
+
+    var changed = 0;
+    for (var h = 0; h < hits.length && changed < 2; h++) {
+      if (rewriteLegPressExercise(hits[h].exercise)) changed += 1;
+    }
+
+    localStorage.setItem(LEG_PRESS_FIX_KEY, "1");
+    if (changed) saveStore(store);
+  }
+
+  migrateRecentLegPress();
 
   if (hasTodayUI && repsSelect && weightSelect) {
     fillSelect(repsSelect, range(1, 12));
